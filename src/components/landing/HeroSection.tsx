@@ -11,7 +11,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAuth }) => {
         {/* Status Pill */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px', borderRadius: 'var(--radius-pill)', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', fontSize: '0.82rem', color: 'var(--accent-mint)', fontWeight: 600, marginBottom: '24px' }}>
           <span>✦</span>
-          <span>Open Registration • Family Health Workspace</span>
+          <span>Open Registration • Private Family Health Platform</span>
         </div>
 
         {/* Title */}

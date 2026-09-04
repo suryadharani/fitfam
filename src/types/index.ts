@@ -2,13 +2,27 @@
  * FitFam Core Domain Types
  */
 
-export type WeightUnit = 'kg' | 'lbs';
+export type WeightUnit = 'kg';
+
+export type CheckInStatus = 'checked-in' | 'due' | 'waiting' | 'first-checkin';
+
+export interface NotificationItem {
+  id: string;
+  type: 'reminder' | 'milestone' | 'summary';
+  title: string;
+  message: string;
+  timestamp: string;
+  memberId?: string;
+  memberName?: string;
+  actionRequired?: boolean;
+  category: 'today' | 'waiting' | 'recent';
+}
 
 export interface UserProfile {
   uid: string;
   email: string | null;
   displayName: string | null;
-  defaultUnit: WeightUnit; // Default 'kg'
+  defaultUnit: WeightUnit; // Standardized to 'kg'
   createdAt: string;
 }
 

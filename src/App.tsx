@@ -35,7 +35,7 @@ const AppContent: React.FC = () => {
         <NeuralBackground />
         <div style={{ textAlign: 'center' }}>
           <span style={{ fontSize: '2.4rem', display: 'block', marginBottom: '12px' }}>🌿</span>
-          <p style={{ fontSize: '0.95rem', fontWeight: 600 }}>Loading FitFam Workspace...</p>
+          <p style={{ fontSize: '0.95rem', fontWeight: 600 }}>Loading FitFam...</p>
         </div>
       </div>
     );

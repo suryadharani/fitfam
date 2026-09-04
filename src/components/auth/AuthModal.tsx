@@ -169,7 +169,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {mode === 'reset' && 'Reset Your Password'}
           </h2>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            {mode === 'signup' && 'Open registration • Free family health workspace'}
+            {mode === 'signup' && 'Open registration • Free family health tracking'}
             {mode === 'signin' && 'Sign in to access your family check-ins'}
             {mode === 'reset' && 'Enter your registered email to receive a reset link'}
           </p>

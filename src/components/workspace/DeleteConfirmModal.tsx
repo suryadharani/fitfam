@@ -50,7 +50,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           Remove {memberName}?
         </h3>
         <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
-          Are you sure you want to remove <strong>{memberName}</strong> from your family workspace? This action cannot be undone.
+          Are you sure you want to remove <strong>{memberName}</strong> from your family? This action cannot be undone.
         </p>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>

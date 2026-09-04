@@ -114,3 +114,23 @@ export async function logoutUserService() {
     throw new Error(formatAuthError(err as AuthError));
   }
 }
+
+/**
+ * Set or update password for current authenticated user (e.g. Google user setting email/password access)
+ */
+export async function setupPasswordForCurrentUser(newPassword: string) {
+  ensureAuth();
+  if (!auth.currentUser) {
+    throw new Error('No authenticated user found. Please sign in first.');
+  }
+  try {
+    const { updatePassword } = await import('firebase/auth');
+    await updatePassword(auth.currentUser, newPassword);
+  } catch (err: unknown) {
+    const authErr = err as AuthError;
+    if (authErr.code === 'auth/requires-recent-login') {
+      throw new Error('For security reasons, setting a password requires recent authentication. Please sign out and sign in again before updating your password.');
+    }
+    throw new Error(formatAuthError(authErr));
+  }
+}

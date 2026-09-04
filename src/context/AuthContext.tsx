@@ -40,8 +40,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             currentUser.email,
             currentUser.displayName
           );
-        } catch {
-          // Non-blocking profile check fallback
+        } catch (err: unknown) {
+          console.error('[FitFam Auth] Failed to ensure user profile document in Firestore:', err);
         }
       }
       setLoading(false);

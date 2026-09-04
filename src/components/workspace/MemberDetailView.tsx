@@ -6,6 +6,7 @@ import {
   addWeighInEntry,
   deleteWeighInEntry
 } from '../../services/firestoreService';
+import { getTargetProgressStatus } from '../../services/checkInEvaluator';
 import { MemberTrendChart } from './MemberTrendChart';
 import { LogWeighInModal } from './LogWeighInModal';
 import { DeleteEntryConfirmModal } from './DeleteEntryConfirmModal';
@@ -56,38 +57,23 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
     setDeletingEntry(null);
   };
 
-  // Compute non-clinical metrics
+  // Compute non-clinical metrics & Target-Aware Trend Intelligence
   const latestEntry = entries.length > 0 ? entries[0] : null;
   const prevEntry = entries.length > 1 ? entries[1] : null;
-  const oldestEntry = entries.length > 0 ? entries[entries.length - 1] : null;
 
-  let wowDiff: string | null = null;
-  let wowClass = 'text-muted';
+  const targetEval = getTargetProgressStatus(
+    latestEntry?.weightKg || 0,
+    member.targetWeightKg,
+    prevEntry?.weightKg
+  );
 
-  if (latestEntry && prevEntry) {
-    const diff = Math.round((latestEntry.weightKg - prevEntry.weightKg) * 10) / 10;
-    if (Math.abs(diff) < 0.05) {
-      wowDiff = '→ 0.0 kg';
-      wowClass = 'text-muted';
-    } else if (diff < 0) {
-      wowDiff = `↓ ${Math.abs(diff).toFixed(1)} kg`;
-      wowClass = 'trend-down';
-    } else {
-      wowDiff = `↑ ${diff.toFixed(1)} kg`;
-      wowClass = 'trend-up';
-    }
-  }
-
-  let totalDiff: string | null = null;
-  if (latestEntry && oldestEntry && entries.length > 1) {
-    const diff = Math.round((latestEntry.weightKg - oldestEntry.weightKg) * 10) / 10;
-    if (Math.abs(diff) < 0.05) {
-      totalDiff = '→ 0.0 kg';
-    } else if (diff < 0) {
-      totalDiff = `↓ ${Math.abs(diff).toFixed(1)} kg`;
-    } else {
-      totalDiff = `↑ ${diff.toFixed(1)} kg`;
-    }
+  let milestoneTag = '🌱 Journey Started';
+  if (entries.length >= 4 && member.targetWeightKg) {
+    milestoneTag = '🎯 Target Journey Underway';
+  } else if (entries.length >= 4) {
+    milestoneTag = '📊 4-Week Picture Available';
+  } else if (entries.length >= 2) {
+    milestoneTag = '📈 Trend Emerging';
   }
 
   return (
@@ -101,10 +87,10 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
             onClick={onBack}
             style={{ padding: '8px 14px', fontSize: '0.88rem' }}
           >
-            ← Back to Overview
+            ← Back to Family Home
           </button>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{member.name}</h2>
               <span
                 style={{
@@ -117,6 +103,18 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
                 }}
               >
                 {member.relationship}
+              </span>
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  color: 'var(--accent-amber)',
+                  background: 'rgba(245, 158, 11, 0.1)',
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-pill)',
+                  fontWeight: 600
+                }}
+              >
+                {milestoneTag}
               </span>
             </div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -147,22 +145,22 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
         </div>
 
         <div className="glass-panel" style={{ padding: '20px', background: 'rgba(16, 185, 129, 0.06)' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Week-over-Week</span>
-          <span className={wowClass} style={{ fontSize: '1.8rem', fontWeight: 800, display: 'block', margin: '4px 0' }}>
-            {wowDiff || '—'}
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Target & Trend Insight</span>
+          <span className={targetEval.cssClass} style={{ fontSize: '1.25rem', fontWeight: 800, display: 'block', margin: '6px 0' }}>
+            {latestEntry ? targetEval.text : '—'}
           </span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-            {prevEntry ? `vs. ${prevEntry.date}` : 'Requires 2 entries'}
+            {targetEval.deltaText}
           </span>
         </div>
 
         <div className="glass-panel" style={{ padding: '20px' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Overall Trajectory</span>
-          <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', margin: '4px 0' }}>
-            {totalDiff || '—'}
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Journey Consistency</span>
+          <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-mint)', display: 'block', margin: '4px 0' }}>
+            {entries.length > 0 ? `${entries.length} Check-ins` : '0 Check-ins'}
           </span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-            {oldestEntry && entries.length > 1 ? `across ${entries.length} check-ins` : 'Building history'}
+            {entries.length >= 2 ? 'Weekly history building' : 'Start your weekly trend'}
           </span>
         </div>
 
@@ -233,7 +231,7 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
                           cursor: 'pointer'
                         }}
                       >
-                        Delete
+                        Delete Log
                       </button>
                     </td>
                   </tr>
