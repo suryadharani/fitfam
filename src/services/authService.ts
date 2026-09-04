@@ -33,8 +33,17 @@ export function formatAuthError(error: AuthError): string {
       return 'Sign-in popup was blocked by your browser. Redirecting to complete authentication...';
     case 'auth/too-many-requests':
       return 'Access to this account has been temporarily disabled due to many failed login attempts. Please reset your password or try again later.';
+    case 'auth/invalid-api-key':
+    case 'auth/api-key-not-valid':
+      return 'Firebase Authentication API Key is invalid or unconfigured. Please configure VITE_FIREBASE_API_KEY.';
     default:
       return error.message || 'An unexpected authentication error occurred. Please try again.';
+  }
+}
+
+function ensureAuth() {
+  if (!auth) {
+    throw new Error('Firebase Authentication is unconfigured or unavailable. Please supply VITE_FIREBASE_API_KEY.');
   }
 }
 
@@ -42,6 +51,7 @@ export function formatAuthError(error: AuthError): string {
  * Sign in with Google Auth Provider via Popup (or Redirect fallback)
  */
 export async function signInWithGoogleService() {
+  ensureAuth();
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
@@ -59,6 +69,7 @@ export async function signInWithGoogleService() {
  * Sign Up with Email and Password
  */
 export async function signUpWithEmailService(email: string, pass: string) {
+  ensureAuth();
   try {
     const result = await createUserWithEmailAndPassword(auth, email, pass);
     return result.user;
@@ -71,6 +82,7 @@ export async function signUpWithEmailService(email: string, pass: string) {
  * Sign In with Email and Password
  */
 export async function signInWithEmailService(email: string, pass: string) {
+  ensureAuth();
   try {
     const result = await signInWithEmailAndPassword(auth, email, pass);
     return result.user;
@@ -83,6 +95,7 @@ export async function signInWithEmailService(email: string, pass: string) {
  * Send Password Reset Email
  */
 export async function resetPasswordService(email: string) {
+  ensureAuth();
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (err: unknown) {
@@ -94,6 +107,7 @@ export async function resetPasswordService(email: string) {
  * Sign Out Current User
  */
 export async function logoutUserService() {
+  if (!auth) return;
   try {
     await signOut(auth);
   } catch (err: unknown) {
