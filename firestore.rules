@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User profile document & nested family subcollections
+    match /users/{userId} {
+      // User A can only read/write their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Family members subcollection (users/{userId}/members/{memberId})
+      match /members/{memberId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+
+        // Weigh-in entries subcollection (users/{userId}/members/{memberId}/entries/{entryId})
+        match /entries/{entryId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+
+    // Default catch-all deny rule for all unauthenticated or cross-user queries
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,102 @@
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
+  AuthError
+} from 'firebase/auth';
+import { auth, googleProvider } from './firebase';
+
+/**
+ * Format raw Firebase Auth errors into clean, human-readable messages.
+ * Explicitly guards against silent account merging and credential collisions.
+ */
+export function formatAuthError(error: AuthError): string {
+  switch (error.code) {
+    case 'auth/account-exists-with-different-credential':
+      return 'An account already exists with this email address using a different sign-in method (e.g. Email/Password). Please sign in using your original provider first to securely connect credentials.';
+    case 'auth/email-already-in-use':
+      return 'An account with this email address already exists. Please sign in instead.';
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+    case 'auth/invalid-credential':
+      return 'Invalid email address or password. Please check your credentials and try again.';
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/weak-password':
+      return 'Password should be at least 6 characters long.';
+    case 'auth/popup-closed-by-user':
+      return 'Sign-in window was closed before completing. Please try again.';
+    case 'auth/popup-blocked':
+      return 'Sign-in popup was blocked by your browser. Redirecting to complete authentication...';
+    case 'auth/too-many-requests':
+      return 'Access to this account has been temporarily disabled due to many failed login attempts. Please reset your password or try again later.';
+    default:
+      return error.message || 'An unexpected authentication error occurred. Please try again.';
+  }
+}
+
+/**
+ * Sign in with Google Auth Provider via Popup (or Redirect fallback)
+ */
+export async function signInWithGoogleService() {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (err: unknown) {
+    const authErr = err as AuthError;
+    if (authErr.code === 'auth/popup-blocked') {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
+    throw new Error(formatAuthError(authErr));
+  }
+}
+
+/**
+ * Sign Up with Email and Password
+ */
+export async function signUpWithEmailService(email: string, pass: string) {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, pass);
+    return result.user;
+  } catch (err: unknown) {
+    throw new Error(formatAuthError(err as AuthError));
+  }
+}
+
+/**
+ * Sign In with Email and Password
+ */
+export async function signInWithEmailService(email: string, pass: string) {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, pass);
+    return result.user;
+  } catch (err: unknown) {
+    throw new Error(formatAuthError(err as AuthError));
+  }
+}
+
+/**
+ * Send Password Reset Email
+ */
+export async function resetPasswordService(email: string) {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (err: unknown) {
+    throw new Error(formatAuthError(err as AuthError));
+  }
+}
+
+/**
+ * Sign Out Current User
+ */
+export async function logoutUserService() {
+  try {
+    await signOut(auth);
+  } catch (err: unknown) {
+    throw new Error(formatAuthError(err as AuthError));
+  }
+}
