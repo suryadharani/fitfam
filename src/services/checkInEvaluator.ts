@@ -94,6 +94,129 @@ export function getTargetProgressStatus(
 }
 
 /**
+ * Derives the user-facing member display name adhering to the Nickname + Disambiguation rule.
+ * Rule:
+ * 1. Primary display name is Nickname (or legacy name if nickname is missing).
+ * 2. If 2 or more members share the same nickname (case-insensitive), append (Relationship).
+ *    Example: "Ramya (Cousin)" vs "Ramya (Mom)"
+ */
+export function getMemberDisplayName(
+  member: FamilyMember,
+  allMembers?: FamilyMember[]
+): string {
+  const nick = (member.nickname || member.name || 'Member').trim();
+  if (!allMembers || allMembers.length <= 1) {
+    return nick;
+  }
+
+  const lowerNick = nick.toLowerCase();
+  const matchingMembers = allMembers.filter((m) => {
+    const mNick = (m.nickname || m.name || '').trim().toLowerCase();
+    return mNick === lowerNick;
+  });
+
+  if (matchingMembers.length > 1) {
+    return `${nick} (${member.relationship})`;
+  }
+
+  return nick;
+}
+
+/**
+ * Derives the Full Name of a family member, with fallback to legacy name.
+ */
+export function getMemberFullName(member: FamilyMember): string {
+  return (member.fullName || member.name || 'Member').trim();
+}
+
+/**
+ * Interface for derived data-driven Family Insights
+ */
+export interface FamilyInsightsData {
+  totalMembers: number;
+  checkedInThisWeekCount: number;
+  activeJourneysCount: number;
+  trend4WeekCount: number;
+  targetProgressCount: number;
+  membersWithTargetCount: number;
+  summarySentence: string;
+}
+
+/**
+ * Calculates data-driven family insights from real members and entries data
+ */
+export function getFamilyInsights(
+  members: FamilyMember[],
+  entriesMap: Record<string, WeighInEntry[]>
+): FamilyInsightsData {
+  const totalMembers = members.length;
+  let checkedInThisWeekCount = 0;
+  let activeJourneysCount = 0;
+  let trend4WeekCount = 0;
+  let targetProgressCount = 0;
+  let membersWithTargetCount = 0;
+
+  members.forEach((m) => {
+    const memberEntries = entriesMap[m.id] || [];
+    const latest = memberEntries.length > 0 ? memberEntries[0] : null;
+    const previous = memberEntries.length > 1 ? memberEntries[1] : null;
+    const status = getMemberCheckInStatus(m, latest);
+
+    if (status === 'checked-in') {
+      checkedInThisWeekCount++;
+    }
+
+    if (memberEntries.length >= 1) {
+      activeJourneysCount++;
+    }
+
+    if (memberEntries.length >= 4) {
+      trend4WeekCount++;
+    }
+
+    if (m.targetWeightKg) {
+      membersWithTargetCount++;
+      if (latest) {
+        const targetEval = getTargetProgressStatus(latest.weightKg, m.targetWeightKg, previous?.weightKg);
+        if (targetEval.cssClass === 'trend-down') {
+          targetProgressCount++;
+        }
+      }
+    }
+  });
+
+  let summarySentence = "Welcome to your private family home.";
+
+  if (totalMembers === 0) {
+    summarySentence = "Add your first family member to begin tracking weekly weigh-ins together.";
+  } else if (totalMembers === 1) {
+    if (activeJourneysCount === 0) {
+      summarySentence = "Your family's journey has started 🌱 1 member has registered.";
+    } else {
+      summarySentence = "Your family's journey has started 🌱 1 member has started checking in.";
+    }
+  } else {
+    if (checkedInThisWeekCount === totalMembers) {
+      summarySentence = "Your family's check-in rhythm is fully up to date this week.";
+    } else if (checkedInThisWeekCount > 0) {
+      summarySentence = "Your family's check-in rhythm is staying consistent.";
+    } else {
+      summarySentence = "Weekly check-ins are currently scheduled for your family members.";
+    }
+  }
+
+  return {
+    totalMembers,
+    checkedInThisWeekCount,
+    activeJourneysCount,
+    trend4WeekCount,
+    targetProgressCount,
+    membersWithTargetCount,
+    summarySentence
+  };
+}
+
+/**
  * Generate in-app notifications dynamically based on real family member data
  */
 export function generateNotifications(
@@ -110,6 +233,7 @@ export function generateNotifications(
     const memberEntries = entriesMap[m.id] || [];
     const latest = memberEntries.length > 0 ? memberEntries[0] : null;
     const status = getMemberCheckInStatus(m, latest);
+    const displayName = getMemberDisplayName(m, members);
 
     if (latest && latest.date === todayDateStr) {
       checkedInTodayCount++;
@@ -119,11 +243,11 @@ export function generateNotifications(
       notifications.push({
         id: `reminder-${m.id}`,
         type: 'reminder',
-        title: `${m.name}'s weekly check-in`,
+        title: `${displayName}'s weekly check-in`,
         message: `Scheduled for ${m.scheduleDay} at ${m.scheduleTime} · Waiting for entry.`,
         timestamp: 'Waiting',
         memberId: m.id,
-        memberName: m.name,
+        memberName: displayName,
         actionRequired: true,
         category: 'waiting'
       });
@@ -131,11 +255,11 @@ export function generateNotifications(
       notifications.push({
         id: `first-${m.id}`,
         type: 'reminder',
-        title: `Welcome ${m.name}`,
+        title: `Welcome ${displayName}`,
         message: `First weekly check-in awaits on ${m.scheduleDay} at ${m.scheduleTime}.`,
         timestamp: 'Pending',
         memberId: m.id,
-        memberName: m.name,
+        memberName: displayName,
         actionRequired: true,
         category: 'today'
       });
@@ -143,11 +267,11 @@ export function generateNotifications(
       notifications.push({
         id: `latest-${m.id}`,
         type: 'summary',
-        title: `${m.name} checked in`,
+        title: `${displayName} checked in`,
         message: `Recorded ${latest.weightKg} kg on ${latest.date}.`,
         timestamp: latest.date,
         memberId: m.id,
-        memberName: m.name,
+        memberName: displayName,
         actionRequired: false,
         category: 'recent'
       });

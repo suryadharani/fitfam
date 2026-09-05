@@ -1,6 +1,8 @@
 import React from 'react';
 import { FamilyMember, WeighInEntry } from '../../types';
 import { MemberCard } from './MemberCard';
+import { FamilyInsightsCard } from './FamilyInsightsCard';
+import { getMemberDisplayName } from '../../services/checkInEvaluator';
 
 interface FamilyOverviewGridProps {
   members: FamilyMember[];
@@ -78,16 +80,19 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
   if (members.length === 1) {
     const singleMember = members[0];
     const memberEntries = entriesMap[singleMember.id] || [];
+    const displayName = getMemberDisplayName(singleMember, members);
 
     if (memberEntries.length === 0) {
       // STATE B — 1 MEMBER, 0 WEIGH-INS
       return (
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <FamilyInsightsCard members={members} entriesMap={entriesMap} />
+
           <div className="glass-panel text-center" style={{ padding: '48px 32px', marginBottom: '32px' }}>
             <span style={{ fontSize: '3rem', display: 'block', marginBottom: '12px' }}>🌱</span>
             <span className="eyebrow-tag">PERSONAL JOURNEY</span>
             <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '8px 0' }}>
-              Welcome to {singleMember.name}'s Journey
+              Welcome to {displayName}'s Journey
             </h2>
             <p style={{ fontSize: '0.98rem', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.6 }}>
               Your first weekly check-in is where your journey begins. Record your initial baseline weight to start unlocking trend insights.
@@ -113,6 +118,7 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
 
           <MemberCard
             member={singleMember}
+            allMembers={members}
             latestEntry={null}
             previousEntry={null}
             onSelect={onSelectMember}
@@ -124,12 +130,14 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
       // STATE C — 1 MEMBER, 1 WEIGH-IN
       return (
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <FamilyInsightsCard members={members} entriesMap={entriesMap} />
+
           <div className="glass-panel" style={{ padding: '28px', marginBottom: '24px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
               <span style={{ fontSize: '1.6rem' }}>🌱</span>
               <div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                  {singleMember.name}'s Journey Has Started
+                  {displayName}'s Journey Has Started
                 </h3>
                 <span style={{ fontSize: '0.8rem', color: 'var(--accent-mint)', fontWeight: 600 }}>
                   First check-in recorded on {memberEntries[0].date} ({memberEntries[0].weightKg} kg)
@@ -143,6 +151,7 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
 
           <MemberCard
             member={singleMember}
+            allMembers={members}
             latestEntry={memberEntries[0]}
             previousEntry={null}
             onSelect={onSelectMember}
@@ -156,6 +165,10 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
   // STATE D / E / F / G — MULTIPLE MEMBERS & MATURE FAMILY VIEW
   return (
     <div>
+      {/* Primary Family Insights Card */}
+      <FamilyInsightsCard members={members} entriesMap={entriesMap} />
+
+      {/* Our Family Members Header & Cards */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <span className="eyebrow-tag">OUR FAMILY</span>
@@ -183,6 +196,7 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
             <MemberCard
               key={member.id}
               member={member}
+              allMembers={members}
               latestEntry={latest}
               previousEntry={previous}
               onSelect={onSelectMember}

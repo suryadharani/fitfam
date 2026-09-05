@@ -6,6 +6,8 @@ interface AddMemberModalProps {
   onClose: () => void;
   onAddMember: (memberData: {
     name: string;
+    fullName?: string;
+    nickname?: string;
     relationship: string;
     scheduleDay: string;
     scheduleTime: string;
@@ -24,7 +26,8 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   onClose,
   onAddMember
 }) => {
-  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [nickname, setNickname] = useState('');
   const [relationship, setRelationship] = useState('Me');
   const [customRelationship, setCustomRelationship] = useState('');
   const [scheduleDay, setScheduleDay] = useState('Sunday');
@@ -43,10 +46,12 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
       ? customRelationship.trim() || relationship
       : relationship;
 
-    const finalName = name.trim() || finalRelationship;
+    const trimmedFullName = fullName.trim();
+    const trimmedNickname = nickname.trim();
+    const resolvedNickname = trimmedNickname || trimmedFullName || finalRelationship;
 
-    if (!finalName) {
-      setError('Please enter a member name or relationship.');
+    if (!resolvedNickname) {
+      setError('Please enter a full name or nickname.');
       return;
     }
 
@@ -55,14 +60,17 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
     try {
       setSubmitting(true);
       await onAddMember({
-        name: finalName,
+        name: resolvedNickname,
+        fullName: trimmedFullName || resolvedNickname,
+        nickname: resolvedNickname,
         relationship: finalRelationship,
         scheduleDay,
         scheduleTime,
         targetWeightKg: parsedTarget
       });
       // Reset form
-      setName('');
+      setFullName('');
+      setNickname('');
       setRelationship('Me');
       setCustomRelationship('');
       setScheduleDay('Sunday');
@@ -79,7 +87,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   const handleSelectShortcut = (shortcut: string) => {
     setRelationship(shortcut);
     if (shortcut !== 'Other') {
-      if (!name) setName(shortcut);
+      if (!nickname) setNickname(shortcut);
       setCustomRelationship('');
     }
   };
@@ -110,7 +118,9 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
           width: '100%',
           position: 'relative',
           background: 'var(--bg-surface)',
-          border: '1px solid var(--border-glass)'
+          border: '1px solid var(--border-glass)',
+          maxHeight: '90vh',
+          overflowY: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -135,7 +145,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
           <span className="eyebrow-tag">HOUSEHOLD MEMBER</span>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '4px 0' }}>Add Family Member</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Add anyone in your household with their own check-in schedule.
+            Add anyone in your household with their own identity and check-in schedule.
           </p>
         </div>
 
@@ -156,12 +166,61 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Quick Relationship Choices */}
+          {/* 1. Full Name */}
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+              Full Name *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Ramya Suryadevara"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg-deep)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-primary)',
+                fontSize: '0.9rem'
+              }}
+            />
+          </div>
+
+          {/* 2. Nickname */}
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+              Nickname *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Ramya"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg-deep)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-primary)',
+                fontSize: '0.9rem'
+              }}
+            />
+            <span style={{ fontSize: '0.75rem', color: 'var(--accent-mint)', display: 'block', marginTop: '4px', fontStyle: 'italic' }}>
+              💡 Nickname is what FitFam will normally show throughout the app.
+            </span>
+          </div>
+
+          {/* 3. Relationship */}
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-              Quick Relationship Option
+              Relationship / Role *
             </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
               {[...RELATIONSHIP_SHORTCUTS, 'Other'].map((rel) => (
                 <button
                   key={rel}
@@ -183,40 +242,11 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Member Name */}
-          <div>
-            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
-              Display Name
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Dad, Priya, Cousin Ravi"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--bg-deep)',
-                border: '1px solid var(--border-glass)',
-                color: 'var(--text-primary)',
-                fontSize: '0.9rem'
-              }}
-            />
-          </div>
-
-          {/* Custom Relationship Input */}
-          {(relationship === 'Other' || !RELATIONSHIP_SHORTCUTS.includes(relationship)) && (
-            <div>
-              <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
-                Custom Relationship / Role
-              </label>
+            {(relationship === 'Other' || !RELATIONSHIP_SHORTCUTS.includes(relationship)) && (
               <input
                 type="text"
-                placeholder="e.g. Cousin, Roommate, Grandmother, Aunt"
+                placeholder="Custom relationship (e.g. Cousin, Roommate, Aunt)"
                 value={customRelationship}
                 onChange={(e) => setCustomRelationship(e.target.value)}
                 style={{
@@ -229,13 +259,13 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
                   fontSize: '0.9rem'
                 }}
               />
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Schedule Selection */}
+          {/* 4. Schedule Selection */}
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
-              Weekly Check-in Schedule
+              Weekly Check-in Schedule *
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <select
@@ -278,7 +308,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
             </div>
           </div>
 
-          {/* Optional Target Weight */}
+          {/* 5. Optional Target Weight */}
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
               Target Weight (kg) — Optional

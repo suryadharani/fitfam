@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FamilyMember } from '../../types';
 import { RELATIONSHIP_SHORTCUTS } from '../../data/demoData';
+import { getMemberDisplayName } from '../../services/checkInEvaluator';
 
 interface EditMemberModalProps {
   isOpen: boolean;
   member: FamilyMember | null;
+  allMembers?: FamilyMember[];
   onClose: () => void;
   onUpdateMember: (
     memberId: string,
@@ -21,10 +23,12 @@ const TIME_SLOTS = [
 export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   isOpen,
   member,
+  allMembers,
   onClose,
   onUpdateMember
 }) => {
-  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [nickname, setNickname] = useState('');
   const [relationship, setRelationship] = useState('Me');
   const [customRelationship, setCustomRelationship] = useState('');
   const [scheduleDay, setScheduleDay] = useState('Sunday');
@@ -35,7 +39,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
 
   useEffect(() => {
     if (member) {
-      setName(member.name);
+      setFullName(member.fullName || member.name || '');
+      setNickname(member.nickname || member.name || '');
       if (RELATIONSHIP_SHORTCUTS.includes(member.relationship)) {
         setRelationship(member.relationship);
         setCustomRelationship('');
@@ -51,6 +56,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
 
   if (!isOpen || !member) return null;
 
+  const displayName = getMemberDisplayName(member, allMembers);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -59,10 +66,12 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       ? customRelationship.trim() || relationship
       : relationship;
 
-    const finalName = name.trim() || finalRelationship;
+    const trimmedFullName = fullName.trim();
+    const trimmedNickname = nickname.trim();
+    const resolvedNickname = trimmedNickname || trimmedFullName || finalRelationship;
 
-    if (!finalName) {
-      setError('Please enter a member name.');
+    if (!resolvedNickname) {
+      setError('Please enter a full name or nickname.');
       return;
     }
 
@@ -71,7 +80,9 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
     try {
       setSubmitting(true);
       await onUpdateMember(member.id, {
-        name: finalName,
+        name: resolvedNickname,
+        fullName: trimmedFullName || resolvedNickname,
+        nickname: resolvedNickname,
         relationship: finalRelationship,
         scheduleDay,
         scheduleTime,
@@ -111,7 +122,9 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
           width: '100%',
           position: 'relative',
           background: 'var(--bg-surface)',
-          border: '1px solid var(--border-glass)'
+          border: '1px solid var(--border-glass)',
+          maxHeight: '90vh',
+          overflowY: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -134,7 +147,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
 
         <div style={{ marginBottom: '24px' }}>
           <span className="eyebrow-tag">EDIT PROFILE</span>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '4px 0' }}>Edit {member.name}</h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '4px 0' }}>Edit {displayName}</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
             Update member name, relationship role, or check-in schedule.
           </p>
@@ -157,16 +170,17 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Member Name */}
+          {/* 1. Full Name */}
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
-              Display Name
+              Full Name *
             </label>
             <input
               type="text"
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Ramya Suryadevara"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               style={{
                 width: '100%',
                 padding: '10px 14px',
@@ -179,10 +193,36 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
             />
           </div>
 
-          {/* Relationship Selection */}
+          {/* 2. Nickname */}
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+              Nickname *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Ramya"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg-deep)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-primary)',
+                fontSize: '0.9rem'
+              }}
+            />
+            <span style={{ fontSize: '0.75rem', color: 'var(--accent-mint)', display: 'block', marginTop: '4px', fontStyle: 'italic' }}>
+              💡 Nickname is what FitFam will normally show throughout the app.
+            </span>
+          </div>
+
+          {/* 3. Relationship Selection */}
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-              Relationship / Role
+              Relationship / Role *
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
               {[...RELATIONSHIP_SHORTCUTS, 'Other'].map((rel) => (
@@ -225,10 +265,10 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
             )}
           </div>
 
-          {/* Schedule Selection */}
+          {/* 4. Schedule Selection */}
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
-              Weekly Check-in Schedule
+              Weekly Check-in Schedule *
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <select
@@ -271,7 +311,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
             </div>
           </div>
 
-          {/* Optional Target Weight */}
+          {/* 5. Optional Target Weight */}
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
               Target Weight (kg) — Optional

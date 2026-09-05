@@ -6,22 +6,25 @@ import {
   addWeighInEntry,
   deleteWeighInEntry
 } from '../../services/firestoreService';
-import { getTargetProgressStatus } from '../../services/checkInEvaluator';
+import { getTargetProgressStatus, getMemberDisplayName } from '../../services/checkInEvaluator';
 import { MemberTrendChart } from './MemberTrendChart';
 import { LogWeighInModal } from './LogWeighInModal';
 import { DeleteEntryConfirmModal } from './DeleteEntryConfirmModal';
 
 interface MemberDetailViewProps {
   member: FamilyMember;
+  allMembers?: FamilyMember[];
   onBack: () => void;
 }
 
-export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBack }) => {
+export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, allMembers, onBack }) => {
   const { user } = useAuth();
   const [entries, setEntries] = useState<WeighInEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isLogModalOpen, setIsLogModalOpen] = useState<boolean>(false);
   const [deletingEntry, setDeletingEntry] = useState<WeighInEntry | null>(null);
+
+  const displayName = getMemberDisplayName(member, allMembers);
 
   const fetchEntries = async () => {
     if (!user) return;
@@ -91,7 +94,7 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
           </button>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{member.name}</h2>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{displayName}</h2>
               <span
                 style={{
                   fontSize: '0.75rem',
@@ -180,7 +183,7 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
         <MemberTrendChart
           entries={entries}
           targetWeightKg={member.targetWeightKg}
-          memberName={member.name}
+          memberName={displayName}
         />
       </div>
 
@@ -194,7 +197,7 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
           </div>
         ) : entries.length === 0 ? (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            No check-ins recorded yet for {member.name}. Click "+ Record Weigh-In" to log the first entry.
+            No check-ins recorded yet for {displayName}. Click "+ Record Weigh-In" to log the first entry.
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -246,6 +249,8 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, onBa
       <LogWeighInModal
         isOpen={isLogModalOpen}
         member={member}
+        allMembers={allMembers}
+        previousWeightKg={latestEntry?.weightKg}
         onClose={() => setIsLogModalOpen(false)}
         onAddEntry={handleAddEntry}
       />

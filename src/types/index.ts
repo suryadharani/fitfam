@@ -29,6 +29,8 @@ export interface UserProfile {
 export interface FamilyMember {
   id: string;
   name: string;
+  fullName?: string;
+  nickname?: string;
   relationship: string; // e.g. 'Me', 'Dad', 'Mom', 'Son', 'Daughter', 'Cousin', etc.
   scheduleDay: string; // e.g. 'Sunday'
   scheduleTime: string; // e.g. '08:00 AM'

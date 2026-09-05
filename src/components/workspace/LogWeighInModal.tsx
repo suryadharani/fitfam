@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FamilyMember } from '../../types';
+import { getMemberDisplayName } from '../../services/checkInEvaluator';
 
 interface LogWeighInModalProps {
   isOpen: boolean;
   member: FamilyMember | null;
+  allMembers?: FamilyMember[];
+  previousWeightKg?: number | null;
   onClose: () => void;
   onAddEntry: (entryData: {
     weightKg: number;
@@ -15,6 +18,8 @@ interface LogWeighInModalProps {
 export const LogWeighInModal: React.FC<LogWeighInModalProps> = ({
   isOpen,
   member,
+  allMembers,
+  previousWeightKg,
   onClose,
   onAddEntry
 }) => {
@@ -26,7 +31,22 @@ export const LogWeighInModal: React.FC<LogWeighInModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      if (previousWeightKg !== undefined && previousWeightKg !== null && previousWeightKg > 0) {
+        setWeight(previousWeightKg.toFixed(1));
+      } else {
+        setWeight('');
+      }
+      setDate(getTodayISO());
+      setNotes('');
+      setError(null);
+    }
+  }, [isOpen, member?.id, previousWeightKg]);
+
   if (!isOpen || !member) return null;
+
+  const displayName = getMemberDisplayName(member, allMembers);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +71,6 @@ export const LogWeighInModal: React.FC<LogWeighInModalProps> = ({
         notes: notes.trim() || undefined
       });
 
-      // Reset form
       setWeight('');
       setDate(getTodayISO());
       setNotes('');
@@ -113,7 +132,7 @@ export const LogWeighInModal: React.FC<LogWeighInModalProps> = ({
         <div style={{ marginBottom: '20px' }}>
           <span className="eyebrow-tag">WEEKLY CHECK-IN</span>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '4px 0' }}>
-            Record Weight for {member.name}
+            Record Weight for {displayName}
           </h2>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
             Log weekly check-in weight in kilograms (kg).
@@ -139,16 +158,23 @@ export const LogWeighInModal: React.FC<LogWeighInModalProps> = ({
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Weight Input (kg) */}
           <div>
-            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
-              Weight (kg) *
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                Weight (kg) *
+              </label>
+              {previousWeightKg ? (
+                <span style={{ fontSize: '0.72rem', color: 'var(--accent-mint)', fontWeight: 600 }}>
+                  Prefilled from last entry: {previousWeightKg.toFixed(1)} kg
+                </span>
+              ) : null}
+            </div>
             <div style={{ position: 'relative' }}>
               <input
                 type="number"
                 step="0.1"
                 required
                 autoFocus
-                placeholder="e.g. 74.5"
+                placeholder="Enter weight"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
                 style={{
@@ -185,7 +211,8 @@ export const LogWeighInModal: React.FC<LogWeighInModalProps> = ({
                 background: 'var(--bg-deep)',
                 border: '1px solid var(--border-glass)',
                 color: 'var(--text-primary)',
-                fontSize: '0.9rem'
+                fontSize: '0.9rem',
+                cursor: 'pointer'
               }}
             />
           </div>

@@ -1,9 +1,10 @@
 import React from 'react';
 import { FamilyMember, WeighInEntry } from '../../types';
-import { getMemberCheckInStatus, getTargetProgressStatus } from '../../services/checkInEvaluator';
+import { getMemberCheckInStatus, getTargetProgressStatus, getMemberDisplayName } from '../../services/checkInEvaluator';
 
 interface MemberCardProps {
   member: FamilyMember;
+  allMembers?: FamilyMember[];
   latestEntry?: WeighInEntry | null;
   previousEntry?: WeighInEntry | null;
   onSelect: (member: FamilyMember) => void;
@@ -12,6 +13,7 @@ interface MemberCardProps {
 
 export const MemberCard: React.FC<MemberCardProps> = ({
   member,
+  allMembers,
   latestEntry,
   previousEntry,
   onSelect,
@@ -28,6 +30,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
     return '👤';
   };
 
+  const displayName = getMemberDisplayName(member, allMembers);
   const status = getMemberCheckInStatus(member, latestEntry);
   const targetEval = getTargetProgressStatus(
     latestEntry?.weightKg || 0,
@@ -66,11 +69,11 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               fontSize: '1.7rem'
             }}
           >
-            {getAvatarEmoji(member.relationship, member.name)}
+            {getAvatarEmoji(member.relationship, displayName)}
           </div>
           <div>
             <h3 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700, color: 'var(--text-primary)' }}>
-              {member.name}
+              {displayName}
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
               <span

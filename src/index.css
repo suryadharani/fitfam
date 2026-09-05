@@ -145,7 +145,12 @@ a {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.45), 0 6px 24px rgba(16, 185, 129, 0.35);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--accent-mint);
+  outline-offset: 3px;
 }
 
 .btn-secondary {
@@ -156,7 +161,14 @@ a {
 
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.14);
+}
+
+.btn-secondary:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 3px;
 }
 
 .btn-nav {
@@ -170,6 +182,7 @@ a {
 .btn-nav:hover {
   background: rgba(16, 185, 129, 0.22);
   border-color: var(--accent-emerald);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-large {
@@ -203,6 +216,36 @@ a {
 .trend-down { color: var(--accent-mint); }
 .trend-up { color: var(--accent-amber); }
 .text-muted { color: var(--text-muted); }
+
+/* Accessibility & Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .btn, .glass-panel, .btn-primary:hover, .btn-secondary:hover {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Requirement 12: Modern Date Picker Input Styling */
+input[type="date"] {
+  color-scheme: dark;
+  font-family: var(--font-body);
+  background-color: var(--bg-deep) !important;
+  color: var(--text-primary) !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85) sepia(1) saturate(5) hue-rotate(110deg);
+  cursor: pointer;
+  opacity: 0.9;
+  padding: 4px;
+  border-radius: 4px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {

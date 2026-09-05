@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { FamilyMember } from '../../types';
 import { setupPasswordForCurrentUser } from '../../services/authService';
+import { getMemberDisplayName, getMemberFullName } from '../../services/checkInEvaluator';
 
 interface SettingsViewProps {
   members: FamilyMember[];
@@ -132,69 +133,81 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {members.map((m) => (
-                <div
-                  key={m.id}
-                  style={{
-                    padding: '16px 20px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid var(--border-glass)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '12px'
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>{m.name}</span>
-                      <span
-                        style={{
-                          fontSize: '0.72rem',
-                          color: 'var(--accent-mint)',
-                          background: 'rgba(16, 185, 129, 0.1)',
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-pill)',
-                          fontWeight: 600
-                        }}
-                      >
-                        {m.relationship}
+              {members.map((m) => {
+                const displayName = getMemberDisplayName(m, members);
+                const fullName = getMemberFullName(m);
+                return (
+                  <div
+                    key={m.id}
+                    style={{
+                      padding: '16px 20px',
+                      borderRadius: 'var(--radius-md)',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid var(--border-glass)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '12px'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
+                          {displayName}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            color: 'var(--accent-mint)',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-pill)',
+                            fontWeight: 600
+                          }}
+                        >
+                          {m.relationship}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                        <span>Nickname: <strong style={{ color: 'var(--text-primary)' }}>{m.nickname || m.name}</strong></span>
+                        <span>Full Name: <strong style={{ color: 'var(--text-primary)' }}>{fullName}</strong></span>
+                      </div>
+
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                        📅 Check-in: {m.scheduleDay} at {m.scheduleTime} {m.targetWeightKg ? `• 🎯 Target: ${m.targetWeightKg} kg` : ''}
                       </span>
                     </div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                      📅 Check-in: {m.scheduleDay} at {m.scheduleTime} {m.targetWeightKg ? `• 🎯 Target: ${m.targetWeightKg} kg` : ''}
-                    </span>
-                  </div>
 
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => onEditMember(m)}
-                      style={{ padding: '6px 12px', fontSize: '0.82rem' }}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDeleteMember(m)}
-                      style={{
-                        background: 'rgba(244, 63, 94, 0.1)',
-                        border: '1px solid rgba(244, 63, 94, 0.25)',
-                        color: 'var(--accent-rose)',
-                        borderRadius: 'var(--radius-sm)',
-                        padding: '6px 12px',
-                        fontSize: '0.82rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      🗑️ Delete
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => onEditMember(m)}
+                        style={{ padding: '6px 12px', fontSize: '0.82rem' }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteMember(m)}
+                        style={{
+                          background: 'rgba(244, 63, 94, 0.1)',
+                          border: '1px solid rgba(244, 63, 94, 0.25)',
+                          color: 'var(--accent-rose)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '6px 12px',
+                          fontSize: '0.82rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

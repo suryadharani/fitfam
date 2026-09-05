@@ -1,9 +1,11 @@
 import React from 'react';
 import { FamilyMember } from '../../types';
+import { getMemberDisplayName } from '../../services/checkInEvaluator';
 
 interface MissedCheckInModalProps {
   isOpen: boolean;
   member: FamilyMember | null;
+  allMembers?: FamilyMember[];
   onClose: () => void;
   onRecordWeighIn: (member: FamilyMember) => void;
 }
@@ -11,10 +13,13 @@ interface MissedCheckInModalProps {
 export const MissedCheckInModal: React.FC<MissedCheckInModalProps> = ({
   isOpen,
   member,
+  allMembers,
   onClose,
   onRecordWeighIn
 }) => {
   if (!isOpen || !member) return null;
+
+  const displayName = getMemberDisplayName(member, allMembers);
 
   return (
     <div
@@ -56,7 +61,7 @@ export const MissedCheckInModal: React.FC<MissedCheckInModalProps> = ({
         </h3>
         
         <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
-          <strong>{member.name}</strong>'s weekly check-in scheduled for <strong>{member.scheduleDay} at {member.scheduleTime}</strong> hasn't been recorded yet.
+          <strong>{displayName}</strong>'s weekly check-in scheduled for <strong>{member.scheduleDay} at {member.scheduleTime}</strong> hasn't been recorded yet.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -69,7 +74,7 @@ export const MissedCheckInModal: React.FC<MissedCheckInModalProps> = ({
             }}
             style={{ width: '100%', padding: '12px', fontSize: '0.92rem' }}
           >
-            + Record Weigh-In for {member.name}
+            + Record Weigh-In for {displayName}
           </button>
           
           <button

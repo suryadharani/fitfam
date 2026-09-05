@@ -9,7 +9,7 @@ import {
   getWeighInEntries,
   addWeighInEntry
 } from '../../services/firestoreService';
-import { generateNotifications, getMemberCheckInStatus } from '../../services/checkInEvaluator';
+import { generateNotifications, getMemberCheckInStatus, getMemberDisplayName } from '../../services/checkInEvaluator';
 
 import { FamilyOverviewGrid } from './FamilyOverviewGrid';
 import { AddMemberModal } from './AddMemberModal';
@@ -85,6 +85,8 @@ export const WorkspaceView: React.FC = () => {
 
   const handleAddMember = async (memberData: {
     name: string;
+    fullName?: string;
+    nickname?: string;
     relationship: string;
     scheduleDay: string;
     scheduleTime: string;
@@ -275,6 +277,7 @@ export const WorkspaceView: React.FC = () => {
           ) : selectedMember ? (
             <MemberDetailView
               member={selectedMember}
+              allMembers={members}
               onBack={() => setSelectedMember(null)}
             />
           ) : (
@@ -294,6 +297,7 @@ export const WorkspaceView: React.FC = () => {
       <MissedCheckInModal
         isOpen={!!missedPopupMember && !hasDismissedPopup}
         member={missedPopupMember}
+        allMembers={members}
         onClose={() => {
           setHasDismissedPopup(true);
           setMissedPopupMember(null);
@@ -306,6 +310,8 @@ export const WorkspaceView: React.FC = () => {
         <LogWeighInModal
           isOpen={!!quickRecordMember}
           member={quickRecordMember}
+          allMembers={members}
+          previousWeightKg={entriesMap[quickRecordMember.id]?.[0]?.weightKg}
           onClose={() => setQuickRecordMember(null)}
           onAddEntry={handleQuickAddWeighIn}
         />
@@ -321,13 +327,14 @@ export const WorkspaceView: React.FC = () => {
       <EditMemberModal
         isOpen={!!editingMember}
         member={editingMember}
+        allMembers={members}
         onClose={() => setEditingMember(null)}
         onUpdateMember={handleUpdateMember}
       />
 
       <DeleteConfirmModal
         isOpen={!!deletingMember}
-        memberName={deletingMember?.name || ''}
+        memberName={deletingMember ? getMemberDisplayName(deletingMember, members) : ''}
         onConfirm={handleDeleteMember}
         onCancel={() => setDeletingMember(null)}
       />
