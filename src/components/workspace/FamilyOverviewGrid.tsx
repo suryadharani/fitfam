@@ -2,6 +2,7 @@ import React from 'react';
 import { FamilyMember, WeighInEntry } from '../../types';
 import { MemberCard } from './MemberCard';
 import { FamilyInsightsCard } from './FamilyInsightsCard';
+import { FamilyTrendsCard } from './FamilyTrendsCard';
 import { getMemberDisplayName } from '../../services/checkInEvaluator';
 
 interface FamilyOverviewGridProps {
@@ -86,6 +87,11 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
       // STATE B — 1 MEMBER, 0 WEIGH-INS
       return (
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <FamilyTrendsCard
+            members={members}
+            entriesMap={entriesMap}
+            onSelectMember={onSelectMember}
+          />
           <FamilyInsightsCard members={members} entriesMap={entriesMap} />
 
           <div className="glass-panel text-center" style={{ padding: '48px 32px', marginBottom: '32px' }}>
@@ -130,6 +136,11 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
       // STATE C — 1 MEMBER, 1 WEIGH-IN
       return (
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <FamilyTrendsCard
+            members={members}
+            entriesMap={entriesMap}
+            onSelectMember={onSelectMember}
+          />
           <FamilyInsightsCard members={members} entriesMap={entriesMap} />
 
           <div className="glass-panel" style={{ padding: '28px', marginBottom: '24px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
@@ -165,10 +176,17 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
   // STATE D / E / F / G — MULTIPLE MEMBERS & MATURE FAMILY VIEW
   return (
     <div>
-      {/* Primary Family Insights Card */}
+      {/* 1. Primary Family Trends Card */}
+      <FamilyTrendsCard
+        members={members}
+        entriesMap={entriesMap}
+        onSelectMember={onSelectMember}
+      />
+
+      {/* 2. Primary Family Insights Card */}
       <FamilyInsightsCard members={members} entriesMap={entriesMap} />
 
-      {/* Our Family Members Header & Cards */}
+      {/* 3. Our Family Members Header & Cards */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <span className="eyebrow-tag">OUR FAMILY</span>
@@ -208,3 +226,4 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
     </div>
   );
 };
+

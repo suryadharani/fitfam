@@ -14,7 +14,14 @@ import { auth, googleProvider } from './firebase';
  * Explicitly guards against silent account merging and credential collisions.
  */
 export function formatAuthError(error: AuthError): string {
-  switch (error.code) {
+  const code = error.code || '';
+  const msg = error.message || '';
+
+  if (code.includes('api-key-not-valid') || msg.includes('api-key-not-valid') || code === 'auth/invalid-api-key') {
+    return 'Firebase Authentication API Key is invalid or unconfigured. Please check VITE_FIREBASE_API_KEY in .env.local.';
+  }
+
+  switch (code) {
     case 'auth/account-exists-with-different-credential':
       return 'An account already exists with this email address using a different sign-in method (e.g. Email/Password). Please sign in using your original provider first to securely connect credentials.';
     case 'auth/email-already-in-use':
@@ -33,11 +40,8 @@ export function formatAuthError(error: AuthError): string {
       return 'Sign-in popup was blocked by your browser. Redirecting to complete authentication...';
     case 'auth/too-many-requests':
       return 'Access to this account has been temporarily disabled due to many failed login attempts. Please reset your password or try again later.';
-    case 'auth/invalid-api-key':
-    case 'auth/api-key-not-valid':
-      return 'Firebase Authentication API Key is invalid or unconfigured. Please configure VITE_FIREBASE_API_KEY.';
     default:
-      return error.message || 'An unexpected authentication error occurred. Please try again.';
+      return msg || 'An unexpected authentication error occurred. Please try again.';
   }
 }
 

@@ -191,17 +191,24 @@ export function getFamilyInsights(
     summarySentence = "Add your first family member to begin tracking weekly weigh-ins together.";
   } else if (totalMembers === 1) {
     if (activeJourneysCount === 0) {
-      summarySentence = "Your family's journey has started 🌱 1 member has registered.";
+      summarySentence = "Your family's journey has started 🌱 1 member registered.";
     } else {
-      summarySentence = "Your family's journey has started 🌱 1 member has started checking in.";
+      summarySentence = "Your family's picture is beginning to take shape.";
     }
   } else {
     if (checkedInThisWeekCount === totalMembers) {
-      summarySentence = "Your family's check-in rhythm is fully up to date this week.";
+      summarySentence = "Everyone is checked in this week. Your family's rhythm is up to date.";
     } else if (checkedInThisWeekCount > 0) {
-      summarySentence = "Your family's check-in rhythm is staying consistent.";
+      const remaining = totalMembers - checkedInThisWeekCount;
+      if (targetProgressCount > 0) {
+        summarySentence = `${targetProgressCount} family ${targetProgressCount === 1 ? 'member is' : 'members are'} moving toward personal targets. ${remaining} check-in waiting.`;
+      } else {
+        summarySentence = `${checkedInThisWeekCount} of ${totalMembers} checked in this week. ${remaining} family ${remaining === 1 ? 'check-in is' : 'check-ins are'} still waiting.`;
+      }
+    } else if (targetProgressCount > 0) {
+      summarySentence = `${targetProgressCount} family ${targetProgressCount === 1 ? 'member is' : 'members are'} moving toward personal targets.`;
     } else {
-      summarySentence = "Weekly check-ins are currently scheduled for your family members.";
+      summarySentence = "Weekly check-ins are scheduled for your family members.";
     }
   }
 
