@@ -19,7 +19,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onEditMember,
   onDeleteMember
 }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, resetPassword } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'family' | 'security' | 'about'>('family');
   
   // Password setup state
@@ -27,6 +27,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pwdMsg, setPwdMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [pwdSubmitting, setPwdSubmitting] = useState(false);
+  const [resetEmailSending, setResetEmailSending] = useState(false);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +52,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setPwdMsg({ type: 'error', text: (err as Error).message });
     } finally {
       setPwdSubmitting(false);
+    }
+  };
+
+  const handleSendResetEmail = async () => {
+    if (!user?.email) return;
+    setPwdMsg(null);
+    try {
+      setResetEmailSending(true);
+      await resetPassword(user.email);
+      setPwdMsg({
+        type: 'success',
+        text: `✓ Password reset link sent to ${user.email}! Please check your email inbox.`
+      });
+    } catch (err: unknown) {
+      setPwdMsg({ type: 'error', text: (err as Error).message });
+    } finally {
+      setResetEmailSending(false);
     }
   };
 
@@ -340,6 +358,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {pwdSubmitting ? 'Saving Password...' : isGoogleUser ? 'Set Account Password' : 'Update Password'}
             </button>
           </form>
+
+          {/* Optional Send Reset Email for Authenticated User */}
+          {user?.email && (
+            <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid var(--border-glass)', maxWidth: '400px' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>
+                Reset via Email Link
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: 1.5 }}>
+                Send a secure Firebase password reset email to <strong>{user.email}</strong>.
+              </p>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={resetEmailSending}
+                onClick={handleSendResetEmail}
+                style={{ padding: '8px 16px', fontSize: '0.84rem' }}
+              >
+                {resetEmailSending ? 'Sending Reset Link...' : '📧 Send Reset Link to Email'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
