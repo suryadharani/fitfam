@@ -162,9 +162,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Modal Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <span style={{ fontSize: '2.2rem', display: 'block', marginBottom: '6px' }}>
-            {mode === 'reset' && resetSent ? '✉️' : '🌿'}
-          </span>
+          {mode === 'reset' && resetSent ? (
+            <span style={{ fontSize: '2.2rem', display: 'block', marginBottom: '6px' }}>✉️</span>
+          ) : (
+            <img
+              src="./fitfam-logo-master.png"
+              alt="FitFam Logo"
+              style={{ height: '52px', width: '52px', objectFit: 'contain', margin: '0 auto 8px', display: 'block' }}
+            />
+          )}
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>
             {mode === 'signup' && 'Create Your FitFam Account'}
             {mode === 'signin' && 'Welcome Back to FitFam'}

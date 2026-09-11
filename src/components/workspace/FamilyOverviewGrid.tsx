@@ -35,7 +35,7 @@ export const FamilyOverviewGrid: React.FC<FamilyOverviewGridProps> = ({
   if (members.length === 0) {
     return (
       <div className="glass-panel text-center" style={{ padding: '64px 32px', maxWidth: '620px', margin: '0 auto' }}>
-        <span style={{ fontSize: '3.5rem', display: 'block', marginBottom: '16px' }}>🌿</span>
+        <img src="./fitfam-logo-master.png" alt="FitFam Logo" style={{ height: '72px', width: '72px', objectFit: 'contain', margin: '0 auto 16px', display: 'block' }} />
         <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '8px' }} className="gradient-text">
           Your FitFam starts here.
         </h2>

@@ -164,7 +164,7 @@ export const WorkspaceView: React.FC = () => {
             }}
             style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
           >
-            <span style={{ fontSize: '1.8rem' }}>🌿</span>
+            <img src="./fitfam-logo-master.png" alt="FitFam Logo" style={{ height: '36px', width: '36px', objectFit: 'contain' }} />
             <div>
               <span style={{ fontFamily: 'var(--font-brand)', fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', lineHeight: 1.1 }}>FitFam</span>
               <span style={{ fontSize: '0.72rem', color: 'var(--accent-mint)', fontWeight: 600 }}>Private Family Home</span>

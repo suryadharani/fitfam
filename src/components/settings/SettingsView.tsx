@@ -102,7 +102,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           { id: 'family', label: '👨‍👩‍👧‍👦 Family Members' },
           { id: 'profile', label: '👤 Profile & Account' },
           { id: 'security', label: '🔒 Password & Security' },
-          { id: 'about', label: '🌿 About FitFam' }
+          { id: 'about', label: 'ℹ️ About FitFam' }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -386,10 +386,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {activeTab === 'about' && (
         <div className="glass-panel" style={{ padding: '28px' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <span style={{ fontSize: '3rem', display: 'block', marginBottom: '8px' }}>🌿</span>
+            <img
+              src="./fitfam-logo-master.png"
+              alt="FitFam Logo"
+              style={{ height: '64px', width: '64px', objectFit: 'contain', margin: '0 auto 8px', display: 'block' }}
+            />
             <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>FitFam</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--accent-mint)', fontWeight: 600, marginTop: '2px' }}>
-              Your family's weekly weigh-in, made simple.
+              Private Family Health Platform
             </p>
           </div>
 

@@ -1,4 +1,4 @@
-# 🌿 FitFam — Your family's weekly weigh-in, made simple.
+# FitFam — Private Family Weight Tracking
 
 > "Record it. Track it. Understand it."
 

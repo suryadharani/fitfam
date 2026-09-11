@@ -6,10 +6,9 @@ export const Footer: React.FC = () => {
       <div className="section-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '40px', marginBottom: '40px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '1.8rem' }}>🌿</span>
+            <img src="./fitfam-logo-master.png" alt="FitFam Logo" style={{ height: '36px', width: '36px', objectFit: 'contain' }} />
             <span style={{ fontFamily: 'var(--font-brand)', fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>FitFam</span>
           </div>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>“Your family’s weekly weigh-in, made simple.”</p>
           <p style={{ fontSize: '0.8rem', color: 'var(--accent-mint)', fontWeight: 600 }}>✦ Open Registration Health Platform</p>
         </div>
 

@@ -31,7 +31,7 @@ export const FamilyInsightsCard: React.FC<FamilyInsightsCardProps> = ({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '1.4rem' }}>🌿</span>
+          <img src="./fitfam-logo-master.png" alt="FitFam Logo" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
           <div>
             <span className="eyebrow-tag" style={{ marginBottom: '2px', fontSize: '0.72rem' }}>
               INTELLIGENT OVERVIEW

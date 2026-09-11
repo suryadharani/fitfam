@@ -12,7 +12,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
     <header className="site-header" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-glass)', background: 'var(--bg-glass)', backdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 100 }}>
       <div className="section-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <a href="./" className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-          <span style={{ fontSize: '1.8rem' }}>🌿</span>
+          <img src="./fitfam-logo-master.png" alt="FitFam Logo" style={{ height: '36px', width: '36px', objectFit: 'contain' }} />
           <div>
             <span style={{ fontFamily: 'var(--font-brand)', fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', lineHeight: 1.1 }}>FitFam</span>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Family Weigh-In</span>

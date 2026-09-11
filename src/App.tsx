@@ -34,7 +34,7 @@ const AppContent: React.FC = () => {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-deep)', color: 'var(--text-secondary)' }}>
         <NeuralBackground />
         <div style={{ textAlign: 'center' }}>
-          <span style={{ fontSize: '2.4rem', display: 'block', marginBottom: '12px' }}>🌿</span>
+          <img src="./fitfam-logo-master.png" alt="FitFam Logo" style={{ height: '56px', width: '56px', objectFit: 'contain', margin: '0 auto 12px', display: 'block' }} />
           <p style={{ fontSize: '0.95rem', fontWeight: 600 }}>Loading FitFam...</p>
         </div>
       </div>
