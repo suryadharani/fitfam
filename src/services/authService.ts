@@ -1,12 +1,16 @@
 import {
   signInWithPopup,
   signInWithRedirect,
+  signInWithCredential,
+  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
   AuthError
 } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { auth, googleProvider } from './firebase';
 
 /**
@@ -52,11 +56,28 @@ function ensureAuth() {
 }
 
 /**
- * Sign in with Google Auth Provider via Popup (or Redirect fallback)
+ * Sign in with Google Auth Provider.
+ * Uses Native Google Play Services Auth on Android/iOS, and Web Popup/Redirect on desktop browsers.
  */
 export async function signInWithGoogleService() {
   ensureAuth();
   try {
+    if (Capacitor.isNativePlatform()) {
+      GoogleAuth.initialize({
+        clientId: '1002272415607-8v1u9fcne8halouc98q2sju33vr68mru.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true
+      });
+      const googleUser = await GoogleAuth.signIn();
+      const idToken = googleUser.authentication?.idToken;
+      if (!idToken) {
+        throw new Error('Google Sign-In was cancelled or failed to obtain authentication token.');
+      }
+      const credential = GoogleAuthProvider.credential(idToken);
+      const result = await signInWithCredential(auth, credential);
+      return result.user;
+    }
+
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   } catch (err: unknown) {
