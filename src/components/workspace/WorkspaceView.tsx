@@ -44,7 +44,12 @@ export const WorkspaceView: React.FC = () => {
 
   // Fetch real family members & entries from Firestore for authenticated user
   const fetchData = async () => {
-    if (!user) return;
+    if (!user) {
+      setMembers([]);
+      setEntriesMap({});
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setFetchError(null);
@@ -73,7 +78,7 @@ export const WorkspaceView: React.FC = () => {
       }
     } catch (err: unknown) {
       console.error('[FitFam Home] Failed to fetch family data from Firestore:', err);
-      setFetchError('Unable to load family check-ins from database. Please check your network connection.');
+      setFetchError('FitFam needs an internet connection to restore your family data on this device.');
     } finally {
       setLoading(false);
     }
@@ -250,11 +255,11 @@ export const WorkspaceView: React.FC = () => {
                 background: 'rgba(244, 63, 94, 0.06)'
               }}
             >
-              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>⚠️</div>
+              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🌱</div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>
-                Database Sync Warning
+                Let's reconnect you
               </h3>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
                 {fetchError}
               </p>
               <button
@@ -263,7 +268,7 @@ export const WorkspaceView: React.FC = () => {
                 onClick={fetchData}
                 style={{ padding: '10px 24px', fontSize: '0.9rem' }}
               >
-                🔄 Retry Loading
+                Try Again
               </button>
             </div>
           ) : isSettingsOpen ? (

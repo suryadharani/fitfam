@@ -1,6 +1,12 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  getFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  Firestore
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -21,7 +27,15 @@ if (hasApiKey) {
   try {
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     authInstance = getAuth(app);
-    dbInstance = getFirestore(app);
+    try {
+      dbInstance = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch {
+      dbInstance = getFirestore(app);
+    }
   } catch (err) {
     console.warn('Firebase setup note:', err);
   }
