@@ -77,20 +77,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             onClick={() => setIsOpen(false)}
           />
           <div
-            className="glass-panel"
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: '48px',
-              width: '340px',
-              maxHeight: '440px',
-              overflowY: 'auto',
-              zIndex: 995,
-              padding: '16px',
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-glass)',
-              boxShadow: 'var(--shadow-card)'
-            }}
+            className="glass-panel notification-dropdown-panel"
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--border-glass)' }}>
               <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)' }}>FitFam Updates</span>

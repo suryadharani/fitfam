@@ -264,3 +264,31 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* Notification Center Responsive Positioning */
+.notification-dropdown-panel {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 340px;
+  max-height: 440px;
+  overflow-y: auto;
+  z-index: 995;
+  padding: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-card);
+}
+
+@media (max-width: 640px) {
+  .notification-dropdown-panel {
+    position: fixed;
+    top: 72px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100vw - 32px);
+    max-width: 380px;
+    max-height: calc(100vh - 96px);
+  }
+}
