@@ -4,7 +4,6 @@ import {
   setDoc,
   collection,
   getDocs,
-  addDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -52,24 +51,26 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 
 /**
  * Add a new family member to users/{uid}/members/
- * Note: Zero default members are seeded automatically.
+ * Uses explicit client-generated document reference for offline durability.
  */
 export async function addFamilyMember(
   uid: string,
   data: Omit<FamilyMember, 'id' | 'createdAt'>
 ): Promise<FamilyMember> {
   const membersRef = collection(db, 'users', uid, 'members');
+  const newMemberRef = doc(membersRef);
   const now = new Date().toISOString();
   
-  const docRef = await addDoc(membersRef, {
+  const payload = {
     ...data,
     createdAt: now
-  });
+  };
+
+  await setDoc(newMemberRef, payload);
 
   return {
-    id: docRef.id,
-    ...data,
-    createdAt: now
+    id: newMemberRef.id,
+    ...payload
   };
 }
 
@@ -109,6 +110,7 @@ export async function deleteFamilyMember(uid: string, memberId: string): Promise
 
 /**
  * Add a weigh-in entry to users/{uid}/members/{memberId}/entries/
+ * Uses explicit client-generated document reference for offline durability.
  * Storage unit standard MUST BE numeric weightKg.
  */
 export async function addWeighInEntry(
@@ -117,6 +119,7 @@ export async function addWeighInEntry(
   data: { weightKg: number; date: string; notes?: string }
 ): Promise<WeighInEntry> {
   const entriesRef = collection(db, 'users', uid, 'members', memberId, 'entries');
+  const newEntryRef = doc(entriesRef);
   const now = new Date().toISOString();
 
   const payload = {
@@ -127,26 +130,39 @@ export async function addWeighInEntry(
     createdAt: now
   };
 
-  const docRef = await addDoc(entriesRef, payload);
+  await setDoc(newEntryRef, payload);
 
   return {
-    id: docRef.id,
+    id: newEntryRef.id,
     ...payload
   };
 }
 
 /**
- * Get all weigh-in entries for a family member ordered by date
+ * Get all weigh-in entries for a family member ordered deterministically by date DESC, then createdAt DESC.
  */
 export async function getWeighInEntries(uid: string, memberId: string): Promise<WeighInEntry[]> {
   const entriesRef = collection(db, 'users', uid, 'members', memberId, 'entries');
   const q = query(entriesRef, orderBy('date', 'desc'));
   const snap = await getDocs(q);
 
-  return snap.docs.map((docSnap) => ({
+  const entries = snap.docs.map((docSnap) => ({
     id: docSnap.id,
     ...(docSnap.data() as Omit<WeighInEntry, 'id'>)
   }));
+
+  // Deterministic ordering: date DESC, then createdAt DESC (with fallback for legacy records without createdAt)
+  return entries.sort((a, b) => {
+    if (b.date !== a.date) {
+      return b.date.localeCompare(a.date);
+    }
+    const timeA = a.createdAt || '';
+    const timeB = b.createdAt || '';
+    if (timeA && timeB) {
+      return timeB.localeCompare(timeA);
+    }
+    return 0;
+  });
 }
 
 /**

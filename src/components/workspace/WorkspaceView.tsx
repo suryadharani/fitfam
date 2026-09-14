@@ -136,10 +136,17 @@ export const WorkspaceView: React.FC = () => {
   const handleQuickAddWeighIn = async (data: { weightKg: number; date: string; notes?: string }) => {
     if (!user || !quickRecordMember) return;
     const newEntry = await addWeighInEntry(user.uid, quickRecordMember.id, data);
-    setEntriesMap((prev) => ({
-      ...prev,
-      [quickRecordMember.id]: [newEntry, ...(prev[quickRecordMember.id] || [])]
-    }));
+    setEntriesMap((prev) => {
+      const existing = prev[quickRecordMember.id] || [];
+      const updated = [newEntry, ...existing].sort((a, b) => {
+        if (b.date !== a.date) return b.date.localeCompare(a.date);
+        const timeA = a.createdAt || '';
+        const timeB = b.createdAt || '';
+        if (timeA && timeB) return timeB.localeCompare(timeA);
+        return 0;
+      });
+      return { ...prev, [quickRecordMember.id]: updated };
+    });
     setQuickRecordMember(null);
   };
 

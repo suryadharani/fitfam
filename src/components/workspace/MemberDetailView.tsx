@@ -50,7 +50,15 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, allM
   }) => {
     if (!user) return;
     const newEntry = await addWeighInEntry(user.uid, member.id, entryData);
-    setEntries((prev) => [newEntry, ...prev]);
+    setEntries((prev) => {
+      return [newEntry, ...prev].sort((a, b) => {
+        if (b.date !== a.date) return b.date.localeCompare(a.date);
+        const timeA = a.createdAt || '';
+        const timeB = b.createdAt || '';
+        if (timeA && timeB) return timeB.localeCompare(timeA);
+        return 0;
+      });
+    });
   };
 
   const handleDeleteEntry = async () => {
