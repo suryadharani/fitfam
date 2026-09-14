@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { FamilyMember, WeighInEntry } from '../../types';
 import {
-  getWeighInEntries,
   addWeighInEntry,
-  deleteWeighInEntry
+  deleteWeighInEntry,
+  subscribeToWeighInEntries
 } from '../../services/firestoreService';
 import { getTargetProgressStatus, getMemberDisplayName } from '../../services/checkInEvaluator';
 import { MemberTrendChart } from './MemberTrendChart';
@@ -21,26 +21,33 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, allM
   const { user } = useAuth();
   const [entries, setEntries] = useState<WeighInEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [hasPendingWrites, setHasPendingWrites] = useState<boolean>(false);
   const [isLogModalOpen, setIsLogModalOpen] = useState<boolean>(false);
   const [deletingEntry, setDeletingEntry] = useState<WeighInEntry | null>(null);
 
   const displayName = getMemberDisplayName(member, allMembers);
 
-  const fetchEntries = async () => {
-    if (!user) return;
-    try {
-      setLoading(true);
-      const data = await getWeighInEntries(user.uid, member.id);
-      setEntries(data);
-    } catch {
-      // Error handling
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchEntries();
+    if (!user || !member?.id) return;
+    setLoading(true);
+
+    const unsubscribe = subscribeToWeighInEntries(
+      user.uid,
+      member.id,
+      (data, isPending) => {
+        setEntries(data);
+        setHasPendingWrites(isPending);
+        setLoading(false);
+      },
+      (err) => {
+        console.error(`[FitFam MemberDetail Sub Error] member ${member.id}:`, err);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, [user, member.id]);
 
   const handleAddEntry = async (entryData: {
@@ -49,23 +56,34 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, allM
     notes?: string;
   }) => {
     if (!user) return;
-    const newEntry = await addWeighInEntry(user.uid, member.id, entryData);
-    setEntries((prev) => {
-      return [newEntry, ...prev].sort((a, b) => {
-        if (b.date !== a.date) return b.date.localeCompare(a.date);
-        const timeA = a.createdAt || '';
-        const timeB = b.createdAt || '';
-        if (timeA && timeB) return timeB.localeCompare(timeA);
-        return 0;
+    try {
+      const newEntry = await addWeighInEntry(user.uid, member.id, entryData);
+      setEntries((prev) => {
+        if (prev.some((e) => e.id === newEntry.id)) return prev;
+        return [newEntry, ...prev].sort((a, b) => {
+          if (b.date !== a.date) return b.date.localeCompare(a.date);
+          const timeA = a.createdAt || '';
+          const timeB = b.createdAt || '';
+          if (timeA && timeB) return timeB.localeCompare(timeA);
+          return 0;
+        });
       });
-    });
+    } catch (err) {
+      console.error('[FitFam Add Weigh-in Error]:', err);
+      alert('Unable to save update. Please check your connection and try again.');
+    }
   };
 
   const handleDeleteEntry = async () => {
     if (!user || !deletingEntry) return;
-    await deleteWeighInEntry(user.uid, member.id, deletingEntry.id);
-    setEntries((prev) => prev.filter((e) => e.id !== deletingEntry.id));
-    setDeletingEntry(null);
+    try {
+      await deleteWeighInEntry(user.uid, member.id, deletingEntry.id);
+      setEntries((prev) => prev.filter((e) => e.id !== deletingEntry.id));
+      setDeletingEntry(null);
+    } catch (err) {
+      console.error('[FitFam Delete Entry Error]:', err);
+      alert('Unable to save update. Please check your connection and try again.');
+    }
   };
 
   // Compute non-clinical metrics & Target-Aware Trend Intelligence
@@ -127,6 +145,21 @@ export const MemberDetailView: React.FC<MemberDetailViewProps> = ({ member, allM
               >
                 {milestoneTag}
               </span>
+              {hasPendingWrites && (
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    color: 'var(--accent-amber)',
+                    background: 'rgba(245, 158, 11, 0.12)',
+                    padding: '2px 10px',
+                    borderRadius: 'var(--radius-pill)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    fontWeight: 600
+                  }}
+                >
+                  Saved locally — will sync when online
+                </span>
+              )}
             </div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               Check-in Schedule: 📅 {member.scheduleDay} at {member.scheduleTime}

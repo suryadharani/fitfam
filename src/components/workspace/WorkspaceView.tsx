@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { FamilyMember, WeighInEntry } from '../../types';
 import {
-  getFamilyMembers,
   addFamilyMember,
   updateFamilyMember,
   deleteFamilyMember,
-  getWeighInEntries,
-  addWeighInEntry
+  addWeighInEntry,
+  subscribeToFamilyMembers,
+  subscribeToWeighInEntries
 } from '../../services/firestoreService';
+import { Unsubscribe } from 'firebase/firestore';
 import { generateNotifications, getMemberCheckInStatus, getMemberDisplayName } from '../../services/checkInEvaluator';
 
 import { FamilyOverviewGrid } from './FamilyOverviewGrid';
@@ -27,6 +28,7 @@ export const WorkspaceView: React.FC = () => {
   const [entriesMap, setEntriesMap] = useState<Record<string, WeighInEntry[]>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [hasPendingWrites, setHasPendingWrites] = useState<boolean>(false);
   
   // Navigation & View States
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
@@ -42,50 +44,88 @@ export const WorkspaceView: React.FC = () => {
   const [missedPopupMember, setMissedPopupMember] = useState<FamilyMember | null>(null);
   const [hasDismissedPopup, setHasDismissedPopup] = useState(false);
 
-  // Fetch real family members & entries from Firestore for authenticated user
-  const fetchData = async () => {
+  const pendingWritesRef = useRef<Record<string, boolean>>({});
+
+  useEffect(() => {
     if (!user) {
       setMembers([]);
       setEntriesMap({});
       setLoading(false);
+      setHasPendingWrites(false);
       return;
     }
-    try {
-      setLoading(true);
-      setFetchError(null);
-      const memberList = await getFamilyMembers(user.uid);
-      setMembers(memberList);
 
-      const map: Record<string, WeighInEntry[]> = {};
-      await Promise.all(
-        memberList.map(async (m) => {
-          const mEntries = await getWeighInEntries(user.uid, m.id);
-          map[m.id] = mEntries;
-        })
-      );
-      setEntriesMap(map);
+    setLoading(true);
+    setFetchError(null);
 
-      // Evaluate missed check-in for contextual popup on load
-      if (!hasDismissedPopup) {
-        const waitingMember = memberList.find((m) => {
-          const latest = map[m.id]?.[0] || null;
-          const status = getMemberCheckInStatus(m, latest);
-          return status === 'waiting' || status === 'due';
+    const entryUnsubscribes: Record<string, Unsubscribe> = {};
+
+    const updatePendingWritesAggregate = () => {
+      const isAnyPending = Object.values(pendingWritesRef.current).some(Boolean);
+      setHasPendingWrites(isAnyPending);
+    };
+
+    // Real-time subscription to family members
+    const unsubscribeMembers = subscribeToFamilyMembers(
+      user.uid,
+      (memberList, membersPending) => {
+        setMembers(memberList);
+        setLoading(false);
+        pendingWritesRef.current['__members'] = membersPending;
+        updatePendingWritesAggregate();
+
+        const currentMemberIds = new Set(memberList.map((m) => m.id));
+
+        // Clean up subscriptions for removed members
+        Object.keys(entryUnsubscribes).forEach((mId) => {
+          if (!currentMemberIds.has(mId)) {
+            entryUnsubscribes[mId]();
+            delete entryUnsubscribes[mId];
+            delete pendingWritesRef.current[mId];
+            setEntriesMap((prev) => {
+              const copy = { ...prev };
+              delete copy[mId];
+              return copy;
+            });
+          }
         });
-        if (waitingMember) {
-          setMissedPopupMember(waitingMember);
-        }
-      }
-    } catch (err: unknown) {
-      console.error('[FitFam Home] Failed to fetch family data from Firestore:', err);
-      setFetchError('FitFam needs an internet connection to restore your family data on this device.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchData();
+        // Subscribe to entries for active members
+        memberList.forEach((m) => {
+          if (!entryUnsubscribes[m.id]) {
+            entryUnsubscribes[m.id] = subscribeToWeighInEntries(
+              user.uid,
+              m.id,
+              (entries, entriesPending) => {
+                setEntriesMap((prev) => ({ ...prev, [m.id]: entries }));
+                pendingWritesRef.current[m.id] = entriesPending;
+                updatePendingWritesAggregate();
+
+                if (!hasDismissedPopup) {
+                  const status = getMemberCheckInStatus(m, entries[0] || null);
+                  if (status === 'waiting' || status === 'due') {
+                    setMissedPopupMember(m);
+                  }
+                }
+              },
+              (err) => {
+                console.error(`[FitFam Entries Sub Error] member ${m.id}:`, err);
+              }
+            );
+          }
+        });
+      },
+      (err) => {
+        console.error('[FitFam Members Sub Error]:', err);
+        setFetchError('FitFam needs an internet connection to restore your family data on this device.');
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribeMembers();
+      Object.values(entryUnsubscribes).forEach((unsub) => unsub());
+    };
   }, [user]);
 
   const handleAddMember = async (memberData: {
@@ -98,9 +138,14 @@ export const WorkspaceView: React.FC = () => {
     targetWeightKg?: number | null;
   }) => {
     if (!user) return;
-    const newMember = await addFamilyMember(user.uid, memberData);
-    setMembers((prev) => [...prev, newMember]);
-    setEntriesMap((prev) => ({ ...prev, [newMember.id]: [] }));
+    try {
+      const newMember = await addFamilyMember(user.uid, memberData);
+      setMembers((prev) => [...prev, newMember]);
+      setEntriesMap((prev) => ({ ...prev, [newMember.id]: [] }));
+    } catch (err) {
+      console.error('[FitFam Add Member Error]:', err);
+      alert('Unable to save update. Please check your connection and try again.');
+    }
   };
 
   const handleUpdateMember = async (
@@ -108,46 +153,61 @@ export const WorkspaceView: React.FC = () => {
     updates: Partial<Omit<FamilyMember, 'id' | 'createdAt'>>
   ) => {
     if (!user) return;
-    await updateFamilyMember(user.uid, memberId, updates);
-    setMembers((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, ...updates } : m))
-    );
-    if (selectedMember && selectedMember.id === memberId) {
-      setSelectedMember((prev) => (prev ? { ...prev, ...updates } : null));
+    try {
+      await updateFamilyMember(user.uid, memberId, updates);
+      setMembers((prev) =>
+        prev.map((m) => (m.id === memberId ? { ...m, ...updates } : m))
+      );
+      if (selectedMember && selectedMember.id === memberId) {
+        setSelectedMember((prev) => (prev ? { ...prev, ...updates } : null));
+      }
+      setEditingMember(null);
+    } catch (err) {
+      console.error('[FitFam Update Member Error]:', err);
+      alert('Unable to save update. Please check your connection and try again.');
     }
-    setEditingMember(null);
   };
 
   const handleDeleteMember = async () => {
     if (!user || !deletingMember) return;
-    await deleteFamilyMember(user.uid, deletingMember.id);
-    setMembers((prev) => prev.filter((m) => m.id !== deletingMember.id));
-    setEntriesMap((prev) => {
-      const copy = { ...prev };
-      delete copy[deletingMember.id];
-      return copy;
-    });
-    if (selectedMember && selectedMember.id === deletingMember.id) {
-      setSelectedMember(null);
+    try {
+      await deleteFamilyMember(user.uid, deletingMember.id);
+      setMembers((prev) => prev.filter((m) => m.id !== deletingMember.id));
+      setEntriesMap((prev) => {
+        const copy = { ...prev };
+        delete copy[deletingMember.id];
+        return copy;
+      });
+      if (selectedMember && selectedMember.id === deletingMember.id) {
+        setSelectedMember(null);
+      }
+      setDeletingMember(null);
+    } catch (err) {
+      console.error('[FitFam Delete Member Error]:', err);
+      alert('Unable to save update. Please check your connection and try again.');
     }
-    setDeletingMember(null);
   };
 
   const handleQuickAddWeighIn = async (data: { weightKg: number; date: string; notes?: string }) => {
     if (!user || !quickRecordMember) return;
-    const newEntry = await addWeighInEntry(user.uid, quickRecordMember.id, data);
-    setEntriesMap((prev) => {
-      const existing = prev[quickRecordMember.id] || [];
-      const updated = [newEntry, ...existing].sort((a, b) => {
-        if (b.date !== a.date) return b.date.localeCompare(a.date);
-        const timeA = a.createdAt || '';
-        const timeB = b.createdAt || '';
-        if (timeA && timeB) return timeB.localeCompare(timeA);
-        return 0;
+    try {
+      const newEntry = await addWeighInEntry(user.uid, quickRecordMember.id, data);
+      setEntriesMap((prev) => {
+        const existing = prev[quickRecordMember.id] || [];
+        const updated = [newEntry, ...existing].sort((a, b) => {
+          if (b.date !== a.date) return b.date.localeCompare(a.date);
+          const timeA = a.createdAt || '';
+          const timeB = b.createdAt || '';
+          if (timeA && timeB) return timeB.localeCompare(timeA);
+          return 0;
+        });
+        return { ...prev, [quickRecordMember.id]: updated };
       });
-      return { ...prev, [quickRecordMember.id]: updated };
-    });
-    setQuickRecordMember(null);
+      setQuickRecordMember(null);
+    } catch (err) {
+      console.error('[FitFam Quick Add Weigh-in Error]:', err);
+      alert('Unable to save update. Please check your connection and try again.');
+    }
   };
 
   const notifications = generateNotifications(members, entriesMap);
@@ -185,6 +245,23 @@ export const WorkspaceView: React.FC = () => {
 
           {/* Header Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Ambient Calm Pending Sync Badge */}
+            {hasPendingWrites && (
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--accent-amber)',
+                  fontWeight: 600,
+                  background: 'rgba(245, 158, 11, 0.1)',
+                  padding: '5px 12px',
+                  borderRadius: 'var(--radius-pill)',
+                  border: '1px solid rgba(245, 158, 11, 0.25)'
+                }}
+              >
+                Saved locally — will sync when online
+              </span>
+            )}
+
             {/* Quick Add Weigh In Button */}
             {members.length > 0 && (
               <button
@@ -272,7 +349,7 @@ export const WorkspaceView: React.FC = () => {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={fetchData}
+                onClick={() => window.location.reload()}
                 style={{ padding: '10px 24px', fontSize: '0.9rem' }}
               >
                 Try Again

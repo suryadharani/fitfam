@@ -7,7 +7,9 @@ import {
   updateDoc,
   deleteDoc,
   query,
-  orderBy
+  orderBy,
+  onSnapshot,
+  Unsubscribe
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { UserProfile, FamilyMember, WeighInEntry } from '../types';
@@ -89,6 +91,34 @@ export async function getFamilyMembers(uid: string): Promise<FamilyMember[]> {
 }
 
 /**
+ * Real-time subscription to family members for an authenticated user.
+ * Emits updated member array and pending writes status.
+ */
+export function subscribeToFamilyMembers(
+  uid: string,
+  onUpdate: (members: FamilyMember[], hasPendingWrites: boolean) => void,
+  onError?: (err: Error) => void
+): Unsubscribe {
+  const membersRef = collection(db, 'users', uid, 'members');
+  const q = query(membersRef, orderBy('createdAt', 'asc'));
+
+  return onSnapshot(
+    q,
+    (snap) => {
+      const members = snap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<FamilyMember, 'id'>)
+      }));
+      onUpdate(members, snap.metadata.hasPendingWrites);
+    },
+    (err) => {
+      console.error('[FitFam Firestore] Family members subscription error:', err);
+      if (onError) onError(err);
+    }
+  );
+}
+
+/**
  * Update family member details
  */
 export async function updateFamilyMember(
@@ -163,6 +193,49 @@ export async function getWeighInEntries(uid: string, memberId: string): Promise<
     }
     return 0;
   });
+}
+
+/**
+ * Real-time subscription to weigh-in entries for a family member.
+ * Emits deterministically sorted entries and pending writes status.
+ */
+export function subscribeToWeighInEntries(
+  uid: string,
+  memberId: string,
+  onUpdate: (entries: WeighInEntry[], hasPendingWrites: boolean) => void,
+  onError?: (err: Error) => void
+): Unsubscribe {
+  const entriesRef = collection(db, 'users', uid, 'members', memberId, 'entries');
+  const q = query(entriesRef, orderBy('date', 'desc'));
+
+  return onSnapshot(
+    q,
+    (snap) => {
+      const entries = snap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<WeighInEntry, 'id'>)
+      }));
+
+      // Deterministic ordering: date DESC, then createdAt DESC
+      entries.sort((a, b) => {
+        if (b.date !== a.date) {
+          return b.date.localeCompare(a.date);
+        }
+        const timeA = a.createdAt || '';
+        const timeB = b.createdAt || '';
+        if (timeA && timeB) {
+          return timeB.localeCompare(timeA);
+        }
+        return 0;
+      });
+
+      onUpdate(entries, snap.metadata.hasPendingWrites);
+    },
+    (err) => {
+      console.error('[FitFam Firestore] Weigh-in entries subscription error:', err);
+      if (onError) onError(err);
+    }
+  );
 }
 
 /**
