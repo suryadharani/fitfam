@@ -36,6 +36,8 @@ export interface FamilyMember {
   scheduleTime: string; // e.g. '08:00 AM'
   targetWeightKg?: number | null;
   createdAt: string;
+  isActive?: boolean;
+  deactivatedAt?: string;
 }
 
 export interface WeighInEntry {

@@ -10,6 +10,7 @@ interface SettingsViewProps {
   onOpenAddMember: () => void;
   onEditMember: (member: FamilyMember) => void;
   onDeleteMember: (member: FamilyMember) => void;
+  onReactivateMember?: (member: FamilyMember) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -17,7 +18,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
   onOpenAddMember,
   onEditMember,
-  onDeleteMember
+  onDeleteMember,
+  onReactivateMember
 }) => {
   const { user, logout, resetPassword } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'family' | 'security' | 'about'>('family');
@@ -28,6 +30,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [pwdMsg, setPwdMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [pwdSubmitting, setPwdSubmitting] = useState(false);
   const [resetEmailSending, setResetEmailSending] = useState(false);
+
+  const activeMembers = members.filter((m) => m.isActive !== false);
+  const deactivatedMembers = members.filter((m) => m.isActive === false);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,7 +135,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="glass-panel" style={{ padding: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Family Members ({members.length})</h3>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Active Family Members ({activeMembers.length})</h3>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
                 Add or edit members in your household. Home cards display their weekly journey status.
               </p>
@@ -145,13 +150,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           </div>
 
-          {members.length === 0 ? (
+          {activeMembers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-muted)' }}>
-              No family members added yet. Click "+ Add Family Member" to begin.
+              No active family members. Click "+ Add Family Member" or restore a deactivated member below.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {members.map((m) => {
+              {activeMembers.map((m) => {
                 const displayName = getMemberDisplayName(m, members);
                 const fullName = getMemberFullName(m);
                 return (
@@ -211,21 +216,88 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         type="button"
                         onClick={() => onDeleteMember(m)}
                         style={{
-                          background: 'rgba(244, 63, 94, 0.1)',
-                          border: '1px solid rgba(244, 63, 94, 0.25)',
-                          color: 'var(--accent-rose)',
+                          background: 'rgba(245, 158, 11, 0.1)',
+                          border: '1px solid rgba(245, 158, 11, 0.25)',
+                          color: 'var(--accent-amber)',
                           borderRadius: 'var(--radius-sm)',
                           padding: '6px 12px',
                           fontSize: '0.82rem',
                           cursor: 'pointer'
                         }}
                       >
-                        🗑️ Delete
+                        🔒 Deactivate
                       </button>
                     </div>
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {deactivatedMembers.length > 0 && (
+            <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--border-glass)' }}>
+              <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 6px', color: 'var(--text-primary)' }}>
+                Deactivated Family Members ({deactivatedMembers.length})
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                Deactivated members are hidden from active check-ins. Their historical weigh-in data is preserved.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {deactivatedMembers.map((m) => {
+                  const displayName = getMemberDisplayName(m, members);
+                  const fullName = getMemberFullName(m);
+                  return (
+                    <div
+                      key={m.id}
+                      style={{
+                        padding: '14px 18px',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px dashed var(--border-glass)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '12px'
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
+                            {displayName}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.72rem',
+                              color: 'var(--accent-amber)',
+                              background: 'rgba(245, 158, 11, 0.1)',
+                              padding: '2px 8px',
+                              borderRadius: 'var(--radius-pill)',
+                              fontWeight: 600
+                            }}
+                          >
+                            Deactivated
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                          Full Name: {fullName} • Relationship: {m.relationship}
+                        </span>
+                      </div>
+
+                      {onReactivateMember && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => onReactivateMember(m)}
+                          style={{ padding: '6px 14px', fontSize: '0.82rem', color: 'var(--accent-mint)', borderColor: 'rgba(16, 185, 129, 0.3)' }}
+                        >
+                          🔄 Restore Member
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

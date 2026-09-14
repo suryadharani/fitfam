@@ -131,11 +131,26 @@ export async function updateFamilyMember(
 }
 
 /**
- * Delete a family member document
+ * Deactivate a family member document (Soft-delete).
+ * Preserves the parent document and historical weigh-in entries subcollection.
  */
 export async function deleteFamilyMember(uid: string, memberId: string): Promise<void> {
   const memberRef = doc(db, 'users', uid, 'members', memberId);
-  await deleteDoc(memberRef);
+  await updateDoc(memberRef, {
+    isActive: false,
+    deactivatedAt: new Date().toISOString()
+  });
+}
+
+/**
+ * Reactivate a previously deactivated family member document.
+ */
+export async function reactivateFamilyMember(uid: string, memberId: string): Promise<void> {
+  const memberRef = doc(db, 'users', uid, 'members', memberId);
+  await updateDoc(memberRef, {
+    isActive: true,
+    deactivatedAt: null
+  });
 }
 
 /**

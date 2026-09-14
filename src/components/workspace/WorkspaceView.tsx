@@ -5,6 +5,7 @@ import {
   addFamilyMember,
   updateFamilyMember,
   deleteFamilyMember,
+  reactivateFamilyMember,
   addWeighInEntry,
   subscribeToFamilyMembers,
   subscribeToWeighInEntries
@@ -45,6 +46,8 @@ export const WorkspaceView: React.FC = () => {
   const [hasDismissedPopup, setHasDismissedPopup] = useState(false);
 
   const pendingWritesRef = useRef<Record<string, boolean>>({});
+
+  const activeMembers = members.filter((m) => m.isActive !== false);
 
   useEffect(() => {
     if (!user) {
@@ -101,7 +104,7 @@ export const WorkspaceView: React.FC = () => {
                 pendingWritesRef.current[m.id] = entriesPending;
                 updatePendingWritesAggregate();
 
-                if (!hasDismissedPopup) {
+                if (!hasDismissedPopup && m.isActive !== false) {
                   const status = getMemberCheckInStatus(m, entries[0] || null);
                   if (status === 'waiting' || status === 'due') {
                     setMissedPopupMember(m);
@@ -172,18 +175,36 @@ export const WorkspaceView: React.FC = () => {
     if (!user || !deletingMember) return;
     try {
       await deleteFamilyMember(user.uid, deletingMember.id);
-      setMembers((prev) => prev.filter((m) => m.id !== deletingMember.id));
-      setEntriesMap((prev) => {
-        const copy = { ...prev };
-        delete copy[deletingMember.id];
-        return copy;
-      });
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === deletingMember.id
+            ? { ...m, isActive: false, deactivatedAt: new Date().toISOString() }
+            : m
+        )
+      );
       if (selectedMember && selectedMember.id === deletingMember.id) {
         setSelectedMember(null);
       }
       setDeletingMember(null);
     } catch (err) {
-      console.error('[FitFam Delete Member Error]:', err);
+      console.error('[FitFam Deactivate Member Error]:', err);
+      alert('Unable to save update. Please check your connection and try again.');
+    }
+  };
+
+  const handleReactivateMember = async (memberToReactivate: FamilyMember) => {
+    if (!user) return;
+    try {
+      await reactivateFamilyMember(user.uid, memberToReactivate.id);
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === memberToReactivate.id
+            ? { ...m, isActive: true, deactivatedAt: undefined }
+            : m
+        )
+      );
+    } catch (err) {
+      console.error('[FitFam Reactivate Member Error]:', err);
       alert('Unable to save update. Please check your connection and try again.');
     }
   };
@@ -210,7 +231,7 @@ export const WorkspaceView: React.FC = () => {
     }
   };
 
-  const notifications = generateNotifications(members, entriesMap);
+  const notifications = generateNotifications(activeMembers, entriesMap);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -263,11 +284,11 @@ export const WorkspaceView: React.FC = () => {
             )}
 
             {/* Quick Add Weigh In Button */}
-            {members.length > 0 && (
+            {activeMembers.length > 0 && (
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => setQuickRecordMember(members[0])}
+                onClick={() => setQuickRecordMember(activeMembers[0])}
                 style={{ padding: '7px 14px', fontSize: '0.82rem' }}
               >
                 + Quick Add
@@ -278,7 +299,7 @@ export const WorkspaceView: React.FC = () => {
             <NotificationCenter
               notifications={notifications}
               onSelectMemberForWeighIn={(mId) => {
-                const targetM = members.find((m) => m.id === mId);
+                const targetM = activeMembers.find((m) => m.id === mId);
                 if (targetM) setQuickRecordMember(targetM);
               }}
             />
@@ -362,6 +383,7 @@ export const WorkspaceView: React.FC = () => {
               onOpenAddMember={() => setIsAddOpen(true)}
               onEditMember={(m) => setEditingMember(m)}
               onDeleteMember={(m) => setDeletingMember(m)}
+              onReactivateMember={handleReactivateMember}
             />
           ) : selectedMember ? (
             <MemberDetailView
@@ -371,7 +393,7 @@ export const WorkspaceView: React.FC = () => {
             />
           ) : (
             <FamilyOverviewGrid
-              members={members}
+              members={activeMembers}
               loading={loading}
               entriesMap={entriesMap}
               onOpenAddModal={() => setIsAddOpen(true)}
