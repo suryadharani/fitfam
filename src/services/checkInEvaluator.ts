@@ -1,4 +1,5 @@
 import { FamilyMember, WeighInEntry, NotificationItem, CheckInStatus } from '../types';
+import { getLocalDateString } from '../utils/dateUtils';
 
 /**
  * Determine check-in status for a family member based on latest entry date
@@ -11,12 +12,13 @@ export function getMemberCheckInStatus(
     return 'first-checkin';
   }
 
-  const today = new Date();
-  const entryDate = new Date(latestEntry.date);
+  const todayStr = getLocalDateString(new Date());
+  const today = new Date(`${todayStr}T00:00:00`);
+  const entryDate = new Date(`${latestEntry.date}T00:00:00`);
   
-  // Calculate difference in days
+  // Calculate difference in days using midnight-aligned local calendar dates
   const diffTime = Math.abs(today.getTime() - entryDate.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays <= 6) {
     return 'checked-in';
@@ -231,7 +233,7 @@ export function generateNotifications(
   entriesMap: Record<string, WeighInEntry[]>
 ): NotificationItem[] {
   const notifications: NotificationItem[] = [];
-  const todayDateStr = new Date().toISOString().split('T')[0];
+  const todayDateStr = getLocalDateString(new Date());
 
   let checkedInTodayCount = 0;
   let totalMembers = members.length;
