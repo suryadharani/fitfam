@@ -6,7 +6,8 @@ import {
   signUpWithEmailService,
   signInWithEmailService,
   resetPasswordService,
-  logoutUserService
+  logoutUserService,
+  deleteUserAccountService
 } from '../services/authService';
 import { createUserProfileIfNotExists } from '../services/firestoreService';
 
@@ -19,6 +20,7 @@ interface AuthContextType {
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: (password?: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -115,6 +117,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const deleteAccount = async (password?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await deleteUserAccountService(password);
+    } catch (err: unknown) {
+      setError((err as Error).message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -126,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithEmail,
         resetPassword,
         logout,
+        deleteAccount,
         clearError
       }}
     >

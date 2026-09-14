@@ -3,6 +3,9 @@ import {
   signInWithRedirect,
   signInWithCredential,
   GoogleAuthProvider,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  deleteUser,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -12,6 +15,7 @@ import {
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { auth, googleProvider } from './firebase';
+import { deleteAllUserData } from './firestoreService';
 
 /**
  * Format raw Firebase Auth errors into clean, human-readable messages.
@@ -156,6 +160,80 @@ export async function setupPasswordForCurrentUser(newPassword: string) {
     if (authErr.code === 'auth/requires-recent-login') {
       throw new Error('For security reasons, setting a password requires recent authentication. Please sign out and sign in again before updating your password.');
     }
+    throw new Error(formatAuthError(authErr));
+  }
+}
+
+/**
+ * Permanently delete current user account and all associated Firestore data.
+ * MUST REQUIRE AN ACTIVE NETWORK CONNECTION.
+ * Reauthenticates current user before executing Firestore batch purge.
+ * Only calls deleteUser(currentUser) after Firestore purge succeeds.
+ */
+export async function deleteUserAccountService(password?: string): Promise<void> {
+  ensureAuth();
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error('No authenticated user found. Please sign in first.');
+  }
+
+  // 1. Strict online network policy
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error(
+      'Account deletion requires an active internet connection. Please connect to the internet to permanently delete your account and household data.'
+    );
+  }
+
+  // 2. Reauthenticate user before destructive operation
+  try {
+    if (password && currentUser.email) {
+      const cred = EmailAuthProvider.credential(currentUser.email, password);
+      await reauthenticateWithCredential(currentUser, cred);
+    } else {
+      // Reauthenticate Google user
+      if (Capacitor.isNativePlatform()) {
+        GoogleAuth.initialize({
+          clientId: '1002272415607-8v1u9fcne8halouc98q2sju33vr68mru.apps.googleusercontent.com',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true
+        });
+        const googleUser = await GoogleAuth.signIn();
+        const idToken = googleUser.authentication?.idToken;
+        if (!idToken) {
+          throw new Error('Google re-authentication was cancelled or failed to obtain authentication token.');
+        }
+        const cred = GoogleAuthProvider.credential(idToken);
+        await reauthenticateWithCredential(currentUser, cred);
+      } else {
+        const result = await signInWithPopup(auth, googleProvider);
+        const cred = GoogleAuthProvider.credentialFromResult(result);
+        if (cred) {
+          await reauthenticateWithCredential(currentUser, cred);
+        }
+      }
+    }
+  } catch (err: unknown) {
+    const authErr = err as AuthError;
+    throw new Error(
+      authErr.message || 'Re-authentication failed. Please check your credentials and try again.'
+    );
+  }
+
+  // 3. Execute complete Firestore batch purge
+  try {
+    await deleteAllUserData(currentUser.uid);
+  } catch (err: unknown) {
+    console.error('[FitFam Auth] Firestore data purge failed:', err);
+    throw new Error(
+      'Failed to purge user data from database. Account deletion was cancelled to prevent data corruption. Please try again.'
+    );
+  }
+
+  // 4. Delete Firebase Auth user ONLY after Firestore purge succeeded
+  try {
+    await deleteUser(currentUser);
+  } catch (err: unknown) {
+    const authErr = err as AuthError;
     throw new Error(formatAuthError(authErr));
   }
 }

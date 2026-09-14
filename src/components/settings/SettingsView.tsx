@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { FamilyMember } from '../../types';
 import { setupPasswordForCurrentUser } from '../../services/authService';
 import { getMemberDisplayName, getMemberFullName } from '../../services/checkInEvaluator';
+import { DeleteAccountModal } from './DeleteAccountModal';
 
 interface SettingsViewProps {
   members: FamilyMember[];
@@ -21,8 +22,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onDeleteMember,
   onReactivateMember
 }) => {
-  const { user, logout, resetPassword } = useAuth();
+  const { user, logout, resetPassword, deleteAccount } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'family' | 'security' | 'about'>('family');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
   // Password setup state
   const [newPassword, setNewPassword] = useState('');
@@ -451,6 +453,32 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             </div>
           )}
+
+          {/* Delete FitFam Account Section */}
+          <div style={{ marginTop: '36px', paddingTop: '24px', borderTop: '1px solid rgba(244, 63, 94, 0.3)' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 6px', color: 'var(--accent-rose)' }}>
+              ⚠️ Delete FitFam Account
+            </h4>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+              Permanently deletes your FitFam account, family members, and all historical weigh-in records. This action cannot be undone.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              style={{
+                background: 'rgba(244, 63, 94, 0.1)',
+                border: '1px solid rgba(244, 63, 94, 0.3)',
+                color: 'var(--accent-rose)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '10px 18px',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              🗑️ Delete FitFam Account...
+            </button>
+          </div>
         </div>
       )}
 
@@ -485,6 +513,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirmDelete={async (password) => {
+          await deleteAccount(password);
+          setIsDeleteModalOpen(false);
+        }}
+        userEmail={user?.email || null}
+        isGoogleUser={user?.providerData.some((p) => p.providerId === 'google.com') || false}
+      />
     </div>
   );
 };

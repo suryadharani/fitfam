@@ -6,6 +6,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  writeBatch,
   query,
   orderBy,
   onSnapshot,
@@ -263,4 +264,45 @@ export async function deleteWeighInEntry(
 ): Promise<void> {
   const entryRef = doc(db, 'users', uid, 'members', memberId, 'entries', entryId);
   await deleteDoc(entryRef);
+}
+
+/**
+ * Safely purge all Firestore documents for a user using writeBatch().
+ * Discovers all members under users/{uid}/members/ and all entries under users/{uid}/members/{memberId}/entries/.
+ * Chunks deletion into sequential atomic batches of max 450 write operations (well under 500 limit).
+ * Finally deletes root users/{uid} document.
+ */
+export async function deleteAllUserData(uid: string): Promise<void> {
+  const docRefs: ReturnType<typeof doc>[] = [];
+
+  // 1. Fetch all family member documents
+  const membersRef = collection(db, 'users', uid, 'members');
+  const membersSnap = await getDocs(membersRef);
+
+  for (const memberDoc of membersSnap.docs) {
+    // 2. Fetch all weigh-in entry documents for each member
+    const entriesRef = collection(db, 'users', uid, 'members', memberDoc.id, 'entries');
+    const entriesSnap = await getDocs(entriesRef);
+    entriesSnap.docs.forEach((entryDoc) => {
+      docRefs.push(doc(db, 'users', uid, 'members', memberDoc.id, 'entries', entryDoc.id));
+    });
+
+    // Add member document
+    docRefs.push(doc(db, 'users', uid, 'members', memberDoc.id));
+  }
+
+  // 3. Add root user profile document
+  const userRef = doc(db, 'users', uid);
+  docRefs.push(userRef);
+
+  // 4. Batch delete in chunks of 450 (under 500 limit per batch)
+  const BATCH_SIZE = 450;
+  for (let i = 0; i < docRefs.length; i += BATCH_SIZE) {
+    const chunk = docRefs.slice(i, i + BATCH_SIZE);
+    const batch = writeBatch(db);
+    chunk.forEach((ref) => {
+      batch.delete(ref);
+    });
+    await batch.commit();
+  }
 }
