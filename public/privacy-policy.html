@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitFam — Privacy Policy</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <style>
+    :root {
+      --bg-deep: #0a0f1d;
+      --bg-surface: #141c2e;
+      --accent-mint: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      line-height: 1.65;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 760px;
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--accent-mint);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .meta-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      font-size: 0.82rem;
+      color: var(--accent-mint);
+      text-decoration: none;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      background: rgba(16, 185, 129, 0.18);
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding-bottom: 6px;
+    }
+
+    h3 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--accent-mint);
+      margin: 16px 0 6px;
+    }
+
+    p, li {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    ul, ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    strong {
+      color: var(--text-primary);
+    }
+
+    .box-highlight {
+      background: rgba(16, 185, 129, 0.06);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin: 18px 0;
+    }
+
+    .box-warning {
+      background: rgba(245, 158, 11, 0.06);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin: 18px 0;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-glass);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .footer a {
+      color: var(--accent-mint);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <img src="./fitfam-logo-master.png" alt="FitFam Logo" class="logo" onerror="this.style.display='none'">
+      <h1>FitFam</h1>
+      <div class="subtitle">Official Privacy Policy</div>
+      <div class="meta-date">Effective Date: September 14, 2026</div>
+
+      <div class="nav-links">
+        <a href="./index.html" class="nav-link">← Back to FitFam App</a>
+        <a href="./delete-account.html" class="nav-link">🗑️ Account Deletion Request</a>
+      </div>
+    </div>
+
+    <!-- Section 1: Introduction & Identity -->
+    <div class="section">
+      <h2>1. Overview & Developer Identity</h2>
+      <p>
+        <strong>FitFam</strong> is a private household weight-tracking and personal health log designed to help families record weekly check-ins together in a supportive, non-judgmental environment.
+      </p>
+      <p>
+        This application is developed and operated by <strong>Dharanidhar Suryadevara</strong> ("we", "us", or "our"). We believe that personal wellness tracking should remain strictly private, transparent, and user-controlled.
+      </p>
+      <div class="box-highlight">
+        <p style="margin: 0; font-weight: 600; color: var(--accent-mint);">
+          🛡️ Our Privacy Commitment: FitFam is a free application. We do NOT display advertisements, we do NOT sell or rent user data, we do NOT use third-party analytics SDKs, and we do NOT track users across third-party websites or services.
+        </p>
+      </div>
+    </div>
+
+    <!-- Section 2: Medical Disclaimer -->
+    <div class="section">
+      <h2>2. Wellness & Non-Medical Purpose Disclaimer</h2>
+      <p>
+        FitFam is designed solely as a personal lifestyle, household organization, and weight-tracking utility. FitFam is <strong>not a medical device</strong>, does not provide medical diagnoses, treatment advice, or clinical monitoring, and should not replace professional medical guidance.
+      </p>
+    </div>
+
+    <!-- Section 3: Information We Collect -->
+    <div class="section">
+      <h2>3. Information We Collect & Store</h2>
+      <p>To provide core application functionality, FitFam processes and stores the following categories of information:</p>
+
+      <h3>A. User Account Information</h3>
+      <ul>
+        <li><strong>Email Address:</strong> Used for account registration, sign-in, and account security.</li>
+        <li><strong>Display Name:</strong> Used for account settings and greeting labels.</li>
+        <li><strong>Firebase User Identifier (UID):</strong> An internal unique identifier generated upon registration, used strictly to isolate and secure database records.</li>
+        <li><strong>Authentication State & Metadata:</strong> Session timestamps managed securely by Firebase Authentication.</li>
+      </ul>
+
+      <h3>B. Household & Family Member Profiles</h3>
+      <ul>
+        <li><strong>Member Display Names, Nicknames & Full Names:</strong> Entered by the account holder to identify family members.</li>
+        <li><strong>Family Relationship Tags:</strong> Labels chosen by the user (e.g., 'Mom', 'Dad', 'Son', 'Daughter') to organize household profiles.</li>
+        <li><strong>Weekly Check-In Schedules:</strong> Designated schedule day and time for weekly check-in reminders.</li>
+        <li><strong>Target Weight (kg):</strong> Optional reference weight in kilograms chosen by the user to visualize personal progress.</li>
+        <li><strong>Member Active / Deactivated Status:</strong> System flag indicating whether a member profile is actively checked in or deactivated.</li>
+      </ul>
+
+      <h3>C. Weigh-In Logs</h3>
+      <ul>
+        <li><strong>Body Weight Records (kg):</strong> Recorded weight values standardized permanently in kilograms (kg).</li>
+        <li><strong>Check-In Dates:</strong> Local calendar dates (YYYY-MM-DD) associated with weigh-in entries.</li>
+        <li><strong>Optional Notes:</strong> Optional personal check-in notes entered by the user.</li>
+      </ul>
+    </div>
+
+    <!-- Section 4: What We DO NOT Collect -->
+    <div class="section">
+      <h2>4. Information We Do NOT Collect</h2>
+      <p>FitFam does <strong>NOT</strong> collect or request any of the following sensitive data types:</p>
+      <ul>
+        <li>❌ <strong>No Passwords Stored by FitFam:</strong> Account passwords are handled exclusively and securely by Google Firebase Authentication. FitFam application code never reads, stores, or transmits raw passwords.</li>
+        <li>❌ <strong>No Device Location:</strong> We do not request or track GPS, IP location, or precise/approximate location.</li>
+        <li>❌ <strong>No Camera, Microphone, or Media Access:</strong> FitFam does not access your device camera, microphone, photos, media library, or files.</li>
+        <li>❌ <strong>No Contacts or Social Graphs:</strong> FitFam does not access device contacts or social media connections.</li>
+        <li>❌ <strong>No Health Sensors or Biometrics:</strong> FitFam does not connect to device health sensors, heart rate monitors, or biometric hardware.</li>
+      </ul>
+    </div>
+
+    <!-- Section 5: Role of External Service Providers -->
+    <div class="section">
+      <h2>5. Cloud Infrastructure & Service Providers</h2>
+      <p>
+        FitFam uses reputable cloud infrastructure service providers strictly to operate the application. Information submitted to FitFam is transmitted over encrypted connections to and processed by these service providers:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Google Firebase Authentication (Google Cloud):</strong> Provides secure user sign-in, password management, and OAuth token validation.
+        </li>
+        <li>
+          <strong>Google Cloud Firestore (Google Cloud):</strong> Provides encrypted cloud database storage to persist user profiles, household members, and weigh-in history.
+        </li>
+        <li>
+          <strong>Google Sign-In (Google LLC):</strong> An optional sign-in provider allowing users to authenticate securely using their existing Google Account.
+        </li>
+        <li>
+          <strong>GitHub Pages (GitHub / Microsoft):</strong> Hosts static web files for browser access and documentation.
+        </li>
+      </ul>
+
+      <p>
+        These service providers process data strictly on our behalf to deliver application functionality in accordance with their respective privacy and security standards.
+      </p>
+    </div>
+
+    <!-- Section 6: Data Security & User Isolation -->
+    <div class="section">
+      <h2>6. Data Security & Multi-Tenant Isolation</h2>
+      <p>We prioritize the security of your family records:</p>
+      <ul>
+        <li><strong>Strict Data Isolation:</strong> Database records are organized in Firestore under a dedicated path (<code>users/{uid}</code>). Backend security rules (<code>request.auth.uid == userId</code>) strictly enforce that an authenticated user can only access their own household subcollections. Cross-user data access is blocked at the database level.</li>
+        <li><strong>Transport Encryption:</strong> All communications between the app and cloud infrastructure are encrypted in transit using HTTPS and TLS protocols.</li>
+        <li><strong>Storage Encryption:</strong> Database records stored on Google Cloud infrastructure are encrypted at rest.</li>
+      </ul>
+    </div>
+
+    <!-- Section 7: Local Caching & Offline Operation -->
+    <div class="section">
+      <h2>7. Offline Storage & Local Caching</h2>
+      <p>
+        To support seamless weekly check-ins without requiring a constant network connection, FitFam uses local database caching on your device:
+      </p>
+      <ul>
+        <li><strong>Offline Check-Ins:</strong> Weigh-in entries recorded while offline are stored locally in secure browser/device cache and automatically synchronized to Cloud Firestore when network connectivity is restored.</li>
+        <li><strong>Session Persistence:</strong> Firebase Authentication maintains authentication tokens locally so you remain securely signed in across app restarts. Signing out revokes the active session token on your device.</li>
+      </ul>
+    </div>
+
+    <!-- Section 8: Member Deactivation vs. Account Deletion -->
+    <div class="section">
+      <h2>8. Member Deactivation vs. Account Deletion</h2>
+
+      <h3>Member Deactivation</h3>
+      <p>
+        Deactivating a family member hides their profile from active weekly check-in prompts while preserving their historical weigh-in entries in your household database. Deactivated members can be restored at any time in <strong>Settings ➡️ Family Members</strong>.
+      </p>
+
+      <h3>Permanent Account Deletion</h3>
+      <p>
+        You have the complete right to delete your FitFam account and purge all associated data at any time:
+      </p>
+      <ul>
+        <li><strong>In-App Deletion:</strong> Open FitFam, go to <strong>Settings ➡️ Password & Security ➡️ Delete FitFam Account</strong>, re-authenticate, and confirm. This executes an immediate atomic database purge of your profile, all family member profiles, and all weigh-in entries, followed by deleting your Firebase Authentication record.</li>
+        <li><strong>Web Request Form:</strong> If you no longer have access to your device, visit our <a href="./delete-account.html" style="color: var(--accent-mint); font-weight: 600;">Account Deletion Request Page</a> to request manual verification and account deletion.</li>
+      </ul>
+    </div>
+
+    <!-- Section 9: Data Retention -->
+    <div class="section">
+      <h2>9. Data Retention Policy</h2>
+      <p>
+        FitFam retains your account data, family member profiles, and weigh-in records <strong>only for as long as your account remains active</strong>. When you initiate account deletion, your user profile, family members, and weigh-in logs are permanently removed from Cloud Firestore and Firebase Authentication.
+      </p>
+    </div>
+
+    <!-- Section 10: Android Permissions -->
+    <div class="section">
+      <h2>10. Android System Permissions</h2>
+      <p>
+        The FitFam Android application requests exactly <strong>one system permission</strong>:
+      </p>
+      <div class="box-highlight">
+        <code style="color: var(--accent-mint); font-weight: 700;">android.permission.INTERNET</code>
+        <p style="margin-top: 6px; font-size: 0.85rem;">
+          Required strictly to synchronize weekly check-in records with Cloud Firestore and authenticate session tokens.
+        </p>
+      </div>
+    </div>
+
+    <!-- Section 11: Children's Privacy -->
+    <div class="section">
+      <h2>11. Intended Audience & Family Use</h2>
+      <p>
+        FitFam is intended for adult household account holders who manage weekly health and weight records for themselves and their family members. We do not knowingly collect personal information directly from children without parent or household manager supervision.
+      </p>
+    </div>
+
+    <!-- Section 12: Changes to This Policy -->
+    <div class="section">
+      <h2>12. Changes to This Privacy Policy</h2>
+      <p>
+        We may update this Privacy Policy from time to time to reflect application improvements or legal requirements. Any updates will be published directly to this page (<code>https://fitfam.is-cool.dev/privacy-policy.html</code>) with a revised "Effective Date" at the top.
+      </p>
+    </div>
+
+    <!-- Section 13: Contact Information -->
+    <div class="section">
+      <h2>13. Contact Us</h2>
+      <p>
+        If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:
+      </p>
+      <div class="box-highlight">
+        <p style="margin: 0;">
+          <strong>Application:</strong> FitFam<br>
+          <strong>Developer / Owner:</strong> Dharanidhar Suryadevara<br>
+          <strong>Privacy Contact Email:</strong> <a href="mailto:info@fitfam.is-cool.dev" style="color: var(--accent-mint); font-weight: 700;">info@fitfam.is-cool.dev</a><br>
+          <strong>Website:</strong> <a href="https://fitfam.is-cool.dev" style="color: var(--accent-mint);">https://fitfam.is-cool.dev</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="footer">
+      FitFam — Private Family Health Platform • Spark Free Tier Architecture<br>
+      <a href="./index.html">FitFam App</a> • <a href="./delete-account.html">Account Deletion</a>
+    </div>
+  </div>
+
+</body>
+</html>
